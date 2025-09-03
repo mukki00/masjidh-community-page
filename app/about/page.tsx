@@ -1,14 +1,16 @@
 import { Users, Heart, BookOpen, Home, Award, Target, Clock, MapPin } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 export default function AboutPage() {
   const leadership = [
     {
-      name: "Imam Abdullah Rahman",
-      role: "Imam & Religious Director",
-      description: "Leading our community in worship and spiritual guidance for over 8 years.",
-      qualifications: "PhD in Islamic Studies, Al-Azhar University",
+      name: "Ash-Sheikh Hussain",
+      role: "Admin",
+      description: "Leading our community in worship and spiritual guidance for over 4 years.",
+      qualifications: "Degree in Islamic Studies, Jamiyah Naleemiyah University",
     },
     {
       name: "Dr. Sarah Ahmed",
@@ -85,51 +87,14 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-primary font-medium">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Page Header */}
       <section className="py-16 px-4 bg-card/30">
         <div className="container mx-auto max-w-4xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 text-balance">About Our Masjid</h1>
           <p className="text-xl text-muted-foreground text-pretty max-w-3xl mx-auto">
-            For over two decades, Jummah Masjid has been a beacon of faith, community, and service. We are dedicated to
+            For over two decades, Balangoda Grand Jummah Mosque has been a beacon of faith, community, and service. We are dedicated to
             fostering spiritual growth, education, and unity among Muslims while building bridges with the wider
             community.
           </p>
@@ -188,7 +153,7 @@ export default function AboutPage() {
                 <div className="border-l-4 border-primary pl-6">
                   <h3 className="text-xl font-semibold text-card-foreground mb-2">2002 - Foundation</h3>
                   <p className="text-muted-foreground text-pretty">
-                    Jummah Masjid was established by a small group of dedicated Muslim families who recognized the need
+                    Balangoda Grand Jummah Mosque was established by a small group of dedicated Muslim families who recognized the need
                     for a proper Islamic center in our community. Starting with just 15 families, we held our first
                     prayers in a rented community hall.
                   </p>
@@ -209,9 +174,9 @@ export default function AboutPage() {
                   </p>
                 </div>
                 <div className="border-l-4 border-primary pl-6">
-                  <h3 className="text-xl font-semibold text-card-foreground mb-2">2024 - Today</h3>
+                  <h3 className="text-xl font-semibold text-card-foreground mb-2">2025 - Today</h3>
                   <p className="text-muted-foreground text-pretty">
-                    Today, Jummah Masjid serves over 300 families and continues to be a cornerstone of the local Muslim
+                    Today, Balangoda Grand Jummah Mosque serves over 300 families and continues to be a cornerstone of the local Muslim
                     community. We remain committed to our founding principles while adapting to meet the evolving needs
                     of our diverse congregation.
                   </p>
@@ -373,19 +338,7 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-8 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">M</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">Jummah Masjid</span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 Jummah Masjid. Serving our community with faith, unity, and compassion.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

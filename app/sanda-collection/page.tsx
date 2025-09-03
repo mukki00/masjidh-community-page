@@ -32,6 +32,8 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 export default function SandaCollectionPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -54,6 +56,9 @@ export default function SandaCollectionPage() {
     payment_method: "",
     notes: "",
   })
+  const [familyIdInput, setFamilyIdInput] = useState("")
+  const [familyDetails, setFamilyDetails] = useState(null)
+  const [familyError, setFamilyError] = useState("")
 
   // Fetch families from API
   const fetchFamilies = async (search = "") => {
@@ -141,6 +146,12 @@ export default function SandaCollectionPage() {
     e.preventDefault()
     setIsProcessing(true)
 
+    if (!familyDetails) {
+      showAlert("error", "Please enter a valid Family ID.")
+      setIsProcessing(false)
+      return
+    }
+
     try {
       const response = await fetch("/api/donations", {
         method: "POST",
@@ -148,7 +159,7 @@ export default function SandaCollectionPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          family_id: selectedFamily.id,
+          family_id: familyDetails.family_id, // Use familyDetails here
           amount: Number.parseFloat(paymentForm.amount),
           category_id: Number.parseInt(paymentForm.category),
           payment_method: paymentForm.payment_method,
@@ -186,6 +197,37 @@ export default function SandaCollectionPage() {
     }
   }
 
+  // Fetch family details by ID
+  const fetchFamilyDetails = async (familyId: string) => {
+    if (!familyId) {
+      setFamilyDetails(null)
+      setFamilyError("")
+      return
+    }
+    try {
+      const response = await fetch(`/api/families/${familyId}`)
+      const result = await response.json()
+      if (result.success && result.data) {
+        setFamilyDetails(result.data)
+        setFamilyError("")
+      } else {
+        setFamilyDetails(null)
+        setFamilyError("Family ID not found. Please check and try again.")
+      }
+    } catch {
+      setFamilyDetails(null)
+      setFamilyError("Family ID not found. Please check and try again.")
+    }
+  }
+
+  // Watch familyIdInput changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchFamilyDetails(familyIdInput)
+    }, 400)
+    return () => clearTimeout(timeoutId)
+  }, [familyIdInput])
+
   // Search families with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -201,47 +243,17 @@ export default function SandaCollectionPage() {
     fetchDonationCategories()
   }, [])
 
+  // Button label logic
+  const getButtonLabel = () => {
+    if (paymentForm.payment_method === "cash") return "Collect Cash"
+    if (paymentForm.payment_method === "bank") return "Verify Receipt"
+    return "Collect"
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-primary font-medium">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Alert Messages */}
       {alert.show && (
@@ -312,9 +324,9 @@ export default function SandaCollectionPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-primary" />
+                  <span className="text-2xl mr-1">💵</span>
                   <span className="text-2xl font-bold text-foreground">
-                    ${dailyStats.todays_collections.toLocaleString()}
+                    LKR {dailyStats.todays_collections.toLocaleString()}
                   </span>
                 </div>
               </CardContent>
@@ -325,7 +337,7 @@ export default function SandaCollectionPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Receipt className="w-5 h-5 text-primary" />
+                  <Receipt className="w-5 h-5 text-secondary" />
                   <span className="text-2xl font-bold text-foreground">{dailyStats.receipts_issued}</span>
                 </div>
               </CardContent>
@@ -535,6 +547,122 @@ export default function SandaCollectionPage() {
           )}
         </div>
       </section>
+
+      {/* Collection Form Section */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-2xl bg-card rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-4 text-primary">SANDA Collection Form</h2>
+          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Family ID</label>
+              <input
+                type="text"
+                name="family_id"
+                value={familyIdInput}
+                onChange={e => setFamilyIdInput(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+              {/* Show error if Family ID is incorrect */}
+              {familyIdInput && familyError && (
+                <div className="text-red-600 text-sm mt-2">{familyError}</div>
+              )}
+            </div>
+            {/* Show family details only if Family ID is entered and details exist */}
+            {familyIdInput && familyDetails && (
+              <div className="bg-gradient-to-br from-green-50 via-white to-green-100 rounded-xl p-4 mb-4 shadow border border-green-200">
+                <div className="flex flex-col md:flex-row md:items-center md:gap-8 mb-2">
+                  <div className="flex-1">
+                    <div className="text-lg font-semibold text-green-900 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-green-600" />
+                      {familyDetails.family_name}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <span className="font-medium text-green-700">Head of Family:</span> {familyDetails.head_of_family}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <Phone className="inline w-4 h-4 mr-1 text-green-600" />
+                      {familyDetails.phone}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <MapPin className="inline w-4 h-4 mr-1 text-green-600" />
+                      {familyDetails.address}
+                    </div>
+                  </div>
+                  <div className="flex-1 mt-4 md:mt-0">
+                    <div className="bg-green-100 rounded-lg p-3">
+                      <div className="font-semibold text-green-800 mb-2">Arrears Per Month:</div>
+                      <ul className="ml-4 list-disc text-green-700 text-sm">
+                        {Object.entries(familyDetails.arrears_per_month).map(([month, amount]) => (
+                          <li key={month}>
+                            <span className="font-medium">{month}:</span> LKR {amount}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row md:gap-8 mt-2">
+                  <div className="flex-1">
+                    <div className="text-base font-semibold text-green-900">
+                      <span className="text-green-700">Total Arrears:</span> <span className="ml-2">LKR {familyDetails.arrears}</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-semibold text-green-900">
+                      <span className="text-green-700">Amount Due:</span> <span className="ml-2">LKR {familyDetails.amount_due}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1">Amount Received (LKR)</label>
+              <input
+                type="number"
+                name="amount"
+                value={paymentForm.amount}
+                onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Payment Method</label>
+              <select
+                name="payment_method"
+                value={paymentForm.payment_method}
+                onChange={e => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                required
+              >
+                <option value="">Select</option>
+                <option value="cash">Cash</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes</label>
+              <textarea
+                name="notes"
+                value={paymentForm.notes}
+                onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                className="w-full border rounded px-3 py-2"
+                rows={3}
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-primary text-white px-6 py-2 rounded font-semibold hover:bg-primary/90"
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : getButtonLabel()}
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   )
 }

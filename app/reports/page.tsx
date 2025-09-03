@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 // Mock data for reports
 const mockDailyData = {
-  "2024-01-03": {
+  "2025-01-03": {
     total_amount: 2450.0,
     total_transactions: 67,
     cash_amount: 1200.0,
@@ -29,10 +31,10 @@ const mockDailyData = {
     status: "closed",
     opened_by: "Admin User",
     closed_by: "Admin User",
-    opened_at: "2024-01-03T08:00:00Z",
-    closed_at: "2024-01-03T18:30:00Z",
+    opened_at: "2025-01-03T08:00:00Z",
+    closed_at: "2025-01-03T18:30:00Z",
   },
-  "2024-01-04": {
+  "2025-01-04": {
     total_amount: 1875.0,
     total_transactions: 52,
     cash_amount: 950.0,
@@ -42,7 +44,7 @@ const mockDailyData = {
     status: "open",
     opened_by: "Admin User",
     closed_by: null,
-    opened_at: "2024-01-04T08:00:00Z",
+    opened_at: "2025-01-04T08:00:00Z",
     closed_at: null,
   },
 }
@@ -150,44 +152,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-primary font-medium">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Alert Messages */}
       {alert.show && (
@@ -548,6 +513,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

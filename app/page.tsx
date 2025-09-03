@@ -1,75 +1,51 @@
 import { Clock, Calendar, BookOpen, Users, MapPin, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
+
 
 export default function HomePage() {
   const prayerTimes = [
-    { name: "Fajr", time: "5:30 AM", arabic: "الفجر" },
-    { name: "Dhuhr", time: "12:45 PM", arabic: "الظهر" },
-    { name: "Asr", time: "4:15 PM", arabic: "العصر" },
-    { name: "Maghrib", time: "6:30 PM", arabic: "المغرب" },
-    { name: "Isha", time: "8:00 PM", arabic: "العشاء" },
+    { name: "Fajr", time: "4:50 AM", arabic: "الفجر" },
+    { name: "Dhuhr", time: "12:07 PM", arabic: "الظهر" },
+    { name: "Asr", time: "3:09 PM", arabic: "العصر" },
+    { name: "Maghrib", time: "6:13 PM", arabic: "المغرب" },
+    { name: "Isha", time: "7:19 PM", arabic: "العشاء" },
   ]
 
   const announcements = [
     {
       title: "Jummah Khutbah - Friday Prayer",
-      description: "Join us for Jummah prayer this Friday at 1:00 PM. Khutbah will be delivered in English and Arabic.",
+      description: "Join us for Jummah prayer this Friday at 12:00 PM. Khutbah will be delivered in Tamil and Sinhala.",
       date: "Every Friday",
     },
     {
       title: "Quran Study Circle",
-      description: "Weekly Quran study and discussion every Sunday after Maghrib prayer.",
-      date: "Sundays",
+      description: "Weekly Quran study and discussion every day after Maghrib prayer.",
+      date: "Every Day",
+    },
+    {
+      title: "Jummai Rathri Bayan",
+      description: "Every Thursday after Ishah, join us for Jummai Rathri Bayan (night sermon). All are welcome.",
+      date: "Every Thursday",
     },
     {
       title: "Community Iftar",
       description: "Monthly community iftar gathering. All families welcome to join us for breaking fast together.",
-      date: "First Saturday",
+      date: "Month of Ramadan",
+    },
+    {
+      title: "Community Sahar",
+      description: "Join us for Sahar (pre-dawn meal) during Ramadan. All are welcome to share the blessings together before Fajr.",
+      date: "Month of Ramadan",
     },
   ]
 
   return (
     <div className="min-h-screen gradient-bg-primary">
       {/* Header Navigation */}
-      <header className="border-b border-border gradient-bg-card backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-primary font-medium">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section
@@ -226,9 +202,9 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  123 Community Street
+                  1st Floor, Islamic Center 
                   <br />
-                  Islamic Center, City 12345
+                  Kalthota Rd, Balangoda
                 </p>
               </CardContent>
             </Card>
@@ -241,9 +217,9 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Phone: (555) 123-4567
+                  Phone: 0452287303
                   <br />
-                  Email: info@jummahjmasjid.org
+                  Email: info@jummahmasjid.org
                 </p>
               </CardContent>
             </Card>
@@ -252,19 +228,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="gradient-bg-card border-t border-border/30 py-8 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">M</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">Jummah Masjid</span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 Jummah Masjid. Serving our community with faith, unity, and compassion.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

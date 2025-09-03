@@ -4,23 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 export default function ContactPage() {
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6 text-primary" />,
       title: "Phone",
-      details: ["Main Office: (555) 123-4567", "Emergency: (555) 123-4568"],
+      details: ["Main Office: 0452287303", "Emergency: 0452287303"],
     },
     {
       icon: <Mail className="w-6 h-6 text-primary" />,
       title: "Email",
-      details: ["info@jummahmasjid.org", "imam@jummahmasjid.org"],
+      details: ["info@balangodagrandmosque.org", "imam@balangodagrandmosque.org"],
     },
     {
       icon: <MapPin className="w-6 h-6 text-primary" />,
       title: "Address",
-      details: ["123 Community Street", "Islamic Center, City 12345"],
+      details: ["1st Floor, Islamic Center", "Kalthota Rd, Balangoda"],
     },
     {
       icon: <Clock className="w-6 h-6 text-primary" />,
@@ -33,29 +35,29 @@ export default function ContactPage() {
     {
       name: "Imam Abdullah Rahman",
       role: "Religious Affairs & Counseling",
-      phone: "(555) 123-4570",
-      email: "imam@jummahmasjid.org",
+      phone: "0452287303",
+      email: "imam@balangodagrandmosque.org",
       availability: "Daily after Maghrib prayer",
     },
     {
       name: "Sister Aisha Mohamed",
       role: "Administration & General Inquiries",
-      phone: "(555) 123-4567",
-      email: "admin@jummahmasjid.org",
+      phone: "0452287303",
+      email: "admin@balangodagrandmosque.org",
       availability: "Mon-Fri, 9:00 AM - 5:00 PM",
     },
     {
       name: "Dr. Sarah Ahmed",
       role: "Education & Islamic School",
-      phone: "(555) 123-4571",
-      email: "education@jummahmasjid.org",
+      phone: "0452287303",
+      email: "education@balangodagrandmosque.org",
       availability: "Weekends & Evenings",
     },
     {
       name: "Brother Omar Hassan",
       role: "Community Outreach & Events",
-      phone: "(555) 123-4572",
-      email: "outreach@jummahmasjid.org",
+      phone: "0452287303",
+      email: "outreach@balangodagrandmosque.org",
       availability: "Tue-Thu, 10:00 AM - 6:00 PM",
     },
   ]
@@ -73,44 +75,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-primary font-medium">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Page Header */}
       <section className="py-16 px-4 bg-card/30">
@@ -251,7 +216,7 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground mb-2">For urgent matters outside office hours, please call:</p>
-                  <p className="text-lg font-semibold text-primary">(555) 123-4568</p>
+                  <p className="text-lg font-semibold text-primary">0452287303</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Emergency line is available 24/7 for urgent religious matters, community emergencies, or pastoral
                     care.
@@ -319,9 +284,9 @@ export default function ContactPage() {
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <p className="font-medium text-foreground">Jummah Masjid</p>
-                      <p className="text-muted-foreground">123 Community Street</p>
-                      <p className="text-muted-foreground">Islamic Center, City 12345</p>
+                      <p className="font-medium text-foreground">Balangoda Grand Jummah Mosque</p>
+                      <p className="text-muted-foreground">1st Floor, Islamic Center</p>
+                      <p className="text-muted-foreground">Kalthota Rd, Balangoda</p>
                     </div>
                     <div>
                       <h4 className="font-medium text-foreground mb-2">Parking Information:</h4>
@@ -362,19 +327,7 @@ export default function ContactPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-8 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">M</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">Jummah Masjid</span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 Jummah Masjid. Serving our community with faith, unity, and compassion.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -1,24 +1,26 @@
 import { Clock, Compass, Calendar, MapPin, Sun } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 export default function PrayerTimesPage() {
   const todaysPrayerTimes = [
-    { name: "Fajr", time: "5:30 AM", arabic: "الفجر", status: "completed", iqamah: "5:45 AM" },
-    { name: "Dhuhr", time: "12:45 PM", arabic: "الظهر", status: "next", iqamah: "1:00 PM" },
-    { name: "Asr", time: "4:15 PM", arabic: "العصر", status: "upcoming", iqamah: "4:30 PM" },
-    { name: "Maghrib", time: "6:30 PM", arabic: "المغرب", status: "upcoming", iqamah: "6:35 PM" },
-    { name: "Isha", time: "8:00 PM", arabic: "العشاء", status: "upcoming", iqamah: "8:15 PM" },
+    { name: "Fajr", time: "4:50 AM", arabic: "الفجر", status: "completed", iqamah: "5:15 AM" },
+    { name: "Dhuhr", time: "12:07 PM", arabic: "الظهر", status: "next", iqamah: "12:17 PM" },
+    { name: "Asr", time: "3:09 PM", arabic: "العصر", status: "upcoming", iqamah: "3:19 PM" },
+    { name: "Maghrib", time: "6:13 PM", arabic: "المغرب", status: "upcoming", iqamah: "6:23 PM" },
+    { name: "Isha", time: "7:19 PM", arabic: "العشاء", status: "upcoming", iqamah: "7:29 PM" },
   ]
 
   const weeklySchedule = [
-    { day: "Monday", fajr: "5:30", dhuhr: "12:45", asr: "4:15", maghrib: "6:30", isha: "8:00" },
-    { day: "Tuesday", fajr: "5:31", dhuhr: "12:45", asr: "4:14", maghrib: "6:29", isha: "7:59" },
-    { day: "Wednesday", fajr: "5:32", dhuhr: "12:45", asr: "4:13", maghrib: "6:28", isha: "7:58" },
-    { day: "Thursday", fajr: "5:33", dhuhr: "12:45", asr: "4:12", maghrib: "6:27", isha: "7:57" },
-    { day: "Friday", fajr: "5:34", dhuhr: "12:45", asr: "4:11", maghrib: "6:26", isha: "7:56" },
-    { day: "Saturday", fajr: "5:35", dhuhr: "12:45", asr: "4:10", maghrib: "6:25", isha: "7:55" },
-    { day: "Sunday", fajr: "5:36", dhuhr: "12:45", asr: "4:09", maghrib: "6:24", isha: "7:54" },
+    { day: "Monday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Tuesday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Wednesday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Thursday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Friday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Saturday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
+    { day: "Sunday", fajr: "4:50", dhuhr: "12:07", asr: "3:09", maghrib: "6:13", isha: "7:19" },
   ]
 
   const getStatusColor = (status: string) => {
@@ -37,44 +39,7 @@ export default function PrayerTimesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-primary font-medium">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-foreground hover:text-primary transition-colors">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Page Header */}
       <section className="py-12 px-4 bg-card/30">
@@ -219,7 +184,7 @@ export default function PrayerTimesPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Sunrise:</span>
-                    <span className="font-medium text-foreground">6:45 AM</span>
+                    <span className="font-medium text-foreground">6:00 AM</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Sunset:</span>
@@ -254,19 +219,7 @@ export default function PrayerTimesPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-8 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">M</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">Jummah Masjid</span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 Jummah Masjid. Serving our community with faith, unity, and compassion.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

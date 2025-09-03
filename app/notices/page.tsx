@@ -2,16 +2,18 @@ import { Calendar, Clock, Users, BookOpen, Heart, Megaphone, Pin } from "lucide-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 export default function NoticesPage() {
   const featuredAnnouncements = [
     {
       id: 1,
-      title: "Ramadan Schedule 2024",
+      title: "Ramadan Schedule 2025",
       description:
         "Updated prayer times and special programs during the holy month of Ramadan. Iftar will be served daily at the masjid.",
       category: "Important",
-      date: "March 10, 2024",
+      date: "March 10, 2025",
       isPinned: true,
       author: "Imam Abdullah",
     },
@@ -21,7 +23,7 @@ export default function NoticesPage() {
       description:
         "Registration is now open for our weekend Islamic school. Classes for children ages 5-16 covering Quran, Arabic, and Islamic studies.",
       category: "Education",
-      date: "March 8, 2024",
+      date: "March 8, 2025",
       isPinned: true,
       author: "Education Committee",
     },
@@ -32,7 +34,7 @@ export default function NoticesPage() {
       id: 1,
       title: "Jummah Khutbah - The Importance of Community",
       description: "Special Jummah khutbah focusing on building stronger community bonds and supporting one another.",
-      date: "March 15, 2024",
+      date: "March 15, 2025",
       time: "1:00 PM",
       location: "Main Prayer Hall",
       category: "Weekly",
@@ -40,9 +42,9 @@ export default function NoticesPage() {
     },
     {
       id: 2,
-      title: "Youth Basketball Tournament",
-      description: "Annual basketball tournament for youth ages 13-18. Registration required by March 20th.",
-      date: "March 22, 2024",
+      title: "Softball Cricket Tournament",
+      description: "Annual Softball Cricket tournament for youth ages 13-18. Registration required by March 20th.",
+      date: "March 22, 2025",
       time: "2:00 PM - 6:00 PM",
       location: "Community Center",
       category: "Youth",
@@ -52,7 +54,7 @@ export default function NoticesPage() {
       id: 3,
       title: "Sisters' Study Circle",
       description: "Monthly study circle for sisters focusing on Tafseer of Surah Al-Baqarah.",
-      date: "March 25, 2024",
+      date: "March 25, 2025",
       time: "7:00 PM - 8:30 PM",
       location: "Sisters' Hall",
       category: "Education",
@@ -62,7 +64,7 @@ export default function NoticesPage() {
       id: 4,
       title: "Community Cleanup Day",
       description: "Join us in beautifying our masjid and surrounding community area. Lunch will be provided.",
-      date: "March 30, 2024",
+      date: "March 30, 2025",
       time: "9:00 AM - 2:00 PM",
       location: "Masjid Grounds",
       category: "Community",
@@ -75,21 +77,21 @@ export default function NoticesPage() {
       id: 1,
       title: "New Parking Arrangements",
       description: "Please note the new parking guidelines to ensure everyone has access during peak prayer times.",
-      date: "March 5, 2024",
+      date: "March 5, 2025",
       category: "Facility",
     },
     {
       id: 2,
       title: "Volunteer Appreciation Dinner",
       description: "Thank you to all our volunteers! Join us for a special appreciation dinner next month.",
-      date: "March 3, 2024",
+      date: "March 3, 2025",
       category: "Community",
     },
     {
       id: 3,
       title: "Library Book Donations Needed",
       description: "Our Islamic library is seeking donations of Islamic books in English and Arabic.",
-      date: "March 1, 2024",
+      date: "March 1, 2025",
       category: "Education",
     },
   ]
@@ -133,44 +135,7 @@ export default function NoticesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Jummah Masjid</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-foreground hover:text-primary transition-colors">
-                Home
-              </a>
-              <a href="/prayer-times" className="text-foreground hover:text-primary transition-colors">
-                Prayer Times
-              </a>
-              <a href="/notices" className="text-primary font-medium">
-                Notice Board
-              </a>
-              <a href="/sanda-collection" className="text-foreground hover:text-primary transition-colors">
-                SANDA Collection
-              </a>
-              <a href="/reports" className="text-foreground hover:text-primary transition-colors">
-                Reports
-              </a>
-              <a href="/import" className="text-foreground hover:text-primary transition-colors">
-                Import Families
-              </a>
-              <a href="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </a>
-              <a href="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Page Header */}
       <section className="py-12 px-4 bg-card/30">
@@ -334,19 +299,7 @@ export default function NoticesPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-8 px-4">
-        <div className="container mx-auto max-w-6xl text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">M</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">Jummah Masjid</span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 Jummah Masjid. Serving our community with faith, unity, and compassion.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
