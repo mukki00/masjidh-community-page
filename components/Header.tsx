@@ -59,21 +59,33 @@ export default function Header() {
         </nav>
         {/* Mobile Nav Menu */}
         {mobileOpen && (
-          <div className="md:hidden mt-2 bg-card rounded shadow-lg p-4 flex flex-col gap-2">
-            {navItems.map(item => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-2 rounded font-medium transition-colors
-                  ${pathname === item.href
-                    ? "bg-primary text-white shadow"
-                    : "text-foreground hover:bg-primary hover:text-white"}
-                `}
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+          <div className="md:hidden mt-2 gradient-bg-card rounded shadow-lg p-4 flex flex-col gap-2 fixed top-16 left-4 right-4 z-50">
+            {/* Close Button */}
+            <button
+              className="absolute top-2 right-2 text-primary hover:text-red-500"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="mt-8 flex flex-col gap-2">
+              {navItems.map(item => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-2 rounded font-medium transition-colors
+                    ${pathname === item.href
+                      ? "bg-primary text-white shadow"
+                      : "text-foreground hover:bg-primary hover:text-white"}
+                  `}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
           </div>
         )}
       </div>
