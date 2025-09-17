@@ -24,9 +24,9 @@ export default function Header() {
   ];
 
   return (
-    <header className="border-b border-border gradient-bg-card backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
-        <nav className="flex items-center justify-between">
+    <header className="border-b border-border gradient-bg-card backdrop-blur-sm sticky top-0 z-50 w-full">
+      <div className="w-full px-4 py-4">
+        <nav className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border border-primary bg-white flex items-center justify-center">
               <img
@@ -35,7 +35,7 @@ export default function Header() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="text-2xl font-extrabold text-primary tracking-tight whitespace-nowrap">
+            <span className="text-2xl font-extrabold text-primary tracking-tight">
               Balangoda Grand Mosque
             </span>
           </div>
