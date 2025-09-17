@@ -129,6 +129,22 @@ export default function Header() {
                   {item.label}
                 </a>
               ))}
+              {/* Donations section in mobile */}
+              <span className="px-3 py-2 font-semibold text-primary">Donations</span>
+              {donationItems.map(item => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-2 rounded font-medium transition-colors ml-4
+                    ${pathname === item.href
+                      ? "bg-primary text-white shadow"
+                      : "text-foreground hover:bg-primary hover:text-white"}
+                  `}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
             </div>
           </div>
         )}
