@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://balangodajummahmasjidh.org.lk'), // <-- Replace with your actual domain
   title: 'Balangoda Grand Mosque',
   description: 'Balangoda Grand Mosque',
-  generator: 'Under One Shadow',
   keywords: [
     'Balangoda Grand Mosque',
     'Balangoda Jummah Mosque',

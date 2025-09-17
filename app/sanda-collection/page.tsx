@@ -37,9 +37,28 @@ import Footer from "@/components/Footer"
 
 export default function SandaCollectionPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedFamily, setSelectedFamily] = useState(null)
-  const [families, setFamilies] = useState([])
-  const [donationCategories, setDonationCategories] = useState([])
+  const [selectedFamily, setSelectedFamily] = useState<FamilyType | null>(null)
+  type FamilyType = {
+    id: string
+    family_id: string
+    family_name: string
+    head_of_family: string
+    phone: string
+    email?: string
+    address: string
+    membership_status: string
+    members?: any[]
+    total_donations?: number
+    last_donation?: string
+    // Add other fields as needed
+  }
+  const [families, setFamilies] = useState<FamilyType[]>([])
+  type DonationCategoryType = {
+    id: number
+    name: string
+    // Add other fields if needed
+  }
+  const [donationCategories, setDonationCategories] = useState<DonationCategoryType[]>([])
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
@@ -57,7 +76,18 @@ export default function SandaCollectionPage() {
     notes: "",
   })
   const [familyIdInput, setFamilyIdInput] = useState("")
-  const [familyDetails, setFamilyDetails] = useState(null)
+  type FamilyDetailsType = {
+    family_id: string
+    family_name: string
+    head_of_family: string
+    phone: string
+    address: string
+    arrears: number
+    amount_due: number
+    arrears_per_month: { [month: string]: number }
+    // Add other fields as needed
+  }
+  const [familyDetails, setFamilyDetails] = useState<FamilyDetailsType | null>(null)
   const [familyError, setFamilyError] = useState("")
 
   // Fetch families from API
@@ -142,7 +172,7 @@ export default function SandaCollectionPage() {
   }
 
   // Handle payment submission
-  const handlePaymentSubmit = async (e) => {
+  const handlePaymentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsProcessing(true)
 

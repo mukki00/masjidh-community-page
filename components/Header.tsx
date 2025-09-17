@@ -1,10 +1,11 @@
 "use client"
 
-import React from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 
 export default function Header() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -29,6 +30,7 @@ export default function Header() {
             />
             <h1 className="text-xl font-bold text-foreground">Balangoda Grand Mosque</h1>
           </div>
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
             {navItems.map(item => (
               <a
@@ -44,7 +46,36 @@ export default function Header() {
               </a>
             ))}
           </div>
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden flex items-center px-2 py-1 rounded text-primary focus:outline-none"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Open navigation"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </nav>
+        {/* Mobile Nav Menu */}
+        {mobileOpen && (
+          <div className="md:hidden mt-2 bg-card rounded shadow-lg p-4 flex flex-col gap-2">
+            {navItems.map(item => (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`px-3 py-2 rounded font-medium transition-colors
+                  ${pathname === item.href
+                    ? "bg-primary text-white shadow"
+                    : "text-foreground hover:bg-primary hover:text-white"}
+                `}
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </header>
   );
