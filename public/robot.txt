@@ -1,0 +1,11 @@
+User-agent: *
+# Allow everything except API and internal Next.js build files
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow public pages
+Allow: /
+
+# Sitemap — replace with your real domain
+Sitemap: https://balangodajummahmasjidh.org.lk/sitemap.xml
