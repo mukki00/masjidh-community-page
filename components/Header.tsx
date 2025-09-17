@@ -27,13 +27,17 @@ export default function Header() {
     <header className="border-b border-border gradient-bg-card backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <nav className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img
-              src="/images/jummah-masjid-hero.png"
-              alt="Balangoda Grand Mosque"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <h1 className="text-xl font-bold text-foreground">Balangoda Grand Mosque</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-primary bg-white flex items-center justify-center">
+              <img
+                src="/images/jummah-masjid-hero.png"
+                alt="Balangoda Grand Mosque Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-2xl font-extrabold text-primary tracking-tight whitespace-nowrap">
+              Balangoda Grand Mosque
+            </span>
           </div>
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4 relative">
