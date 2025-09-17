@@ -2,20 +2,25 @@
 
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [donationOpen, setDonationOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/prayer-times", label: "Prayer Times" },
     { href: "/notices", label: "Notice Board" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  const donationItems = [
     { href: "/sanda-collection", label: "SANDA Collection" },
     { href: "/import", label: "Import Families" },
     { href: "/reports", label: "Reports" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
   ];
 
   return (
@@ -31,20 +36,59 @@ export default function Header() {
             <h1 className="text-xl font-bold text-foreground">Balangoda Grand Mosque</h1>
           </div>
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4 relative">
             {navItems.map(item => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-2 rounded font-medium transition-colors
+                className={`w-40 h-10 text-center px-2 py-2 rounded font-medium transition-colors
                   ${pathname === item.href
                     ? "bg-primary text-white shadow"
                     : "text-foreground hover:bg-primary hover:text-white"}
                 `}
+                onClick={() => setMobileOpen(false)}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
+            {/* Donations Dropdown */}
+            <div className="relative">
+              <div
+                className={`w-40 h-10 text-center px-2 py-2 rounded font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer
+                  ${donationItems.some(di => pathname === di.href)
+                    ? "bg-primary text-white shadow"
+                    : "text-foreground hover:bg-primary hover:text-white"}
+                `}
+                onClick={() => setDonationOpen(!donationOpen)}
+                tabIndex={0}
+                role="button"
+                aria-haspopup="true"
+                aria-expanded={donationOpen}
+              >
+                Donations
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {donationOpen && (
+                <div className="absolute left-0 mt-2 w-40 bg-card rounded shadow-lg z-50">
+                  {donationItems.map(item => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`block px-4 py-2 rounded font-medium transition-colors
+                        ${pathname === item.href
+                          ? "bg-primary text-white shadow"
+                          : "text-foreground hover:bg-primary hover:text-white"}
+                      `}
+                      onClick={() => setDonationOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           {/* Mobile Hamburger */}
           <button
