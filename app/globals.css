@@ -207,4 +207,15 @@
       radial-gradient(circle at 75% 75%, oklch(0.35 0.12 160 / 0.03) 0%, transparent 50%);
     pointer-events: none;
   }
+
+  html, body, #__next {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* optional utility to prevent flex children expanding past parent */
+  .flex-truncate > * {
+    min-width: 0;
+  }
 }
