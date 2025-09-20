@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Removed invalid @custom-variant dark (&:is(.dark *)); */
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(1 0 0); /* Pure white background */
@@ -101,7 +101,7 @@
   }
 }
 
-:root {
+@theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
@@ -144,15 +144,10 @@
 
 @layer base {
   * {
-    border-color: var(--border);
-    outline-color: var(--ring);
-    outline-width: 2px;
-    outline-style: solid;
-    outline-offset: -2px;
+    @apply border-border outline-ring/50;
   }
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-background text-foreground;
   }
 
   /* Adding beautiful gradient backgrounds and shading */
@@ -211,16 +206,5 @@
     background-image: radial-gradient(circle at 25% 25%, oklch(0.25 0.15 160 / 0.05) 0%, transparent 50%),
       radial-gradient(circle at 75% 75%, oklch(0.35 0.12 160 / 0.03) 0%, transparent 50%);
     pointer-events: none;
-  }
-
-  html, body, #__next {
-    width: 100%;
-    min-width: 0;
-    overflow-x: hidden;
-  }
-
-  /* optional utility to prevent flex children expanding past parent */
-  .flex-truncate > * {
-    min-width: 0;
   }
 }
