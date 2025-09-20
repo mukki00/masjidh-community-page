@@ -52,11 +52,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="w-full">
       <head>
         <link rel="icon" href="/images/jummah-masjid-hero.png" />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      {/* add suppressHydrationWarning to avoid dev-time mismatch warnings caused by extensions/clients */}
+      <body
+        suppressHydrationWarning
+        className={`w-full min-h-screen font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden`}
+      >
         {children}
         <Analytics />
       </body>
