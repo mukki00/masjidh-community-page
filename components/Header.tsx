@@ -11,11 +11,24 @@ export default function Header() {
 
   // new: track viewport width client-side to show hamburger for <= 1380px
   const [isNarrow, setIsNarrow] = useState(false);
+  // previous non-debounced resize effect replaced with debounced version
   useEffect(() => {
-    const update = () => setIsNarrow(window.innerWidth <= 1380);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const update = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setIsNarrow(window.innerWidth <= 1380);
+      }, 150); // debounce delay in ms (adjust as needed)
+    };
+
+    // run once to initialize
     update();
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+
+    return () => {
+      window.removeEventListener("resize", update);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const navItems = [
@@ -167,7 +180,7 @@ export default function Header() {
                   aria-controls="mobile-donations-list"
                 >
                   <span>Donations</span>
-                  <span className="ml-2 text-sm" aria-hidden>
+                  <span className="ml-2 text-sm" aria-hidden="true">
                     {donationOpen ? "▲" : "▼"}
                   </span>
                 </button>
