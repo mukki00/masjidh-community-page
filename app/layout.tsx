@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     siteName: 'Balangoda Grand Mosque',
     images: [
       {
-        url: '/favicon.ico',
-        width: 64,
-        height: 64,
+        url: '/images/jummah-masjid-hero.png',
+        width: 1200,
+        height: 630,
         alt: 'Balangoda Grand Mosque',
       },
     ],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Balangoda Grand Mosque',
     description: 'Sheltering communities with compassion and unity. Find prayer times, notices, and community updates.',
-    images: '/favicon.ico',
+    images: '/images/jummah-masjid-hero.png',
   },
 }
 
