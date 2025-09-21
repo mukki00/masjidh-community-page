@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/favicon.ico',
-        width: 1200,
-        height: 630,
+        width: 64,
+        height: 64,
         alt: 'Balangoda Grand Mosque',
       },
     ],
