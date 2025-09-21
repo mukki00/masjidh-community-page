@@ -52,7 +52,7 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border border-primary bg-white flex items-center justify-center">
               <img
-                src="/images/jummah-masjid-hero.png"
+                src="/favicon.ico"
                 alt="Balangoda Grand Mosque Logo"
                 className="w-full h-full object-cover"
               />

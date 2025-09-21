@@ -56,7 +56,7 @@ export default function RootLayout({
       <head>
         {/* Favicon files — add public/favicon.ico and optionally a PNG in public/ */}
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/images/jummah-masjid-hero.png" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
         {/* Optional: theme color */}
         <meta name="theme-color" content="#eafaf0" />
       </head>
