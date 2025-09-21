@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: 'Balangoda Grand Mosque',
     images: [
       {
-        url: '/images/jummah-masjid-hero.png',
+        url: '/favicon.ico',
         width: 1200,
         height: 630,
         alt: 'Balangoda Grand Mosque',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Balangoda Grand Mosque',
     description: 'Sheltering communities with compassion and unity. Find prayer times, notices, and community updates.',
-    images: '/images/jummah-masjid-hero.png',
+    images: '/favicon.ico',
   },
 }
 
@@ -56,7 +56,7 @@ export default function RootLayout({
       <head>
         {/* Favicon files — add public/favicon.ico and optionally a PNG in public/ */}
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/images/jummah-masjid-hero.png" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
         {/* Optional: theme color */}
         <meta name="theme-color" content="#eafaf0" />
       </head>
