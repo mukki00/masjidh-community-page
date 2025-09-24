@@ -262,19 +262,12 @@ export default function SandaCollectionPage() {
 
   // Watch familyIdInput changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchFamilyDetails(familyIdInput)
-    }, 400)
-    return () => clearTimeout(timeoutId)
+    fetchFamilyDetails(familyIdInput)
   }, [familyIdInput])
 
-  // Search families with debounce
+  // Search families
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchFamilies(searchTerm)
-    }, 300)
-
-    return () => clearTimeout(timeoutId)
+    fetchFamilies(searchTerm)
   }, [searchTerm])
 
   // Initial data fetch
