@@ -74,7 +74,7 @@ export function FullPageLoading({
           <img 
             src="/favicon.ico" 
             alt="Mosque Logo" 
-            className="absolute w-8 h-8 object-contain rounded-full"
+            className="absolute w-6 h-6 object-contain rounded-full"
           />
         </div>
         <p className="text-muted-foreground font-medium">{text}</p>
