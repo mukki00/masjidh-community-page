@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { Upload, Download, FileText, CheckCircle, AlertCircle, Database, ArrowRight } from "lucide-react"
+import { useLoading } from "@/components/loading-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,6 +16,7 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 
 export default function ImportPage() {
+  const { setLoading } = useLoading()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -75,6 +77,7 @@ export default function ImportPage() {
 
     setIsUploading(true)
     setUploadProgress(0)
+    setLoading(true, "Processing import file...")
 
     try {
       const formData = new FormData()
@@ -115,6 +118,7 @@ export default function ImportPage() {
       showAlert("error", "Failed to process import")
     } finally {
       setIsUploading(false)
+      setLoading(false)
       setTimeout(() => setUploadProgress(0), 2000)
     }
   }

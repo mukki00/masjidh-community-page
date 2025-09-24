@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
+import { LoadingProvider } from '@/components/loading-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -65,7 +66,9 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`w-full min-h-screen font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden`}
       >
-        {children}
+        <LoadingProvider>
+          {children}
+        </LoadingProvider>
         <Analytics />
       </body>
     </html>

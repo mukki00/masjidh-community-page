@@ -16,6 +16,8 @@ import {
   Download,
   Eye,
 } from "lucide-react"
+import { useLoading } from "@/components/loading-provider"
+import { LoadingSpinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -36,8 +38,10 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 
 export default function SandaCollectionPage() {
+  const { setLoading } = useLoading()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFamily, setSelectedFamily] = useState<FamilyType | null>(null)
+  const [isDataLoading, setIsDataLoading] = useState(true)
   type FamilyType = {
     id: string
     family_id: string
@@ -93,6 +97,7 @@ export default function SandaCollectionPage() {
   // Fetch families from API
   const fetchFamilies = async (search = "") => {
     try {
+      if (!search) setIsDataLoading(true)
       const url = search ? `/api/families?search=${encodeURIComponent(search)}` : "/api/families"
       const response = await fetch(url)
       const result = await response.json()
@@ -103,6 +108,8 @@ export default function SandaCollectionPage() {
     } catch (error) {
       console.error("Error fetching families:", error)
       showAlert("error", "Failed to fetch families")
+    } finally {
+      if (!search) setIsDataLoading(false)
     }
   }
 
@@ -175,10 +182,12 @@ export default function SandaCollectionPage() {
   const handlePaymentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsProcessing(true)
+    setLoading(true, "Processing payment...")
 
     if (!familyDetails) {
       showAlert("error", "Please enter a valid Family ID.")
       setIsProcessing(false)
+      setLoading(false)
       return
     }
 
@@ -224,6 +233,7 @@ export default function SandaCollectionPage() {
       showAlert("error", "Failed to process donation")
     } finally {
       setIsProcessing(false)
+      setLoading(false)
     }
   }
 
@@ -269,8 +279,19 @@ export default function SandaCollectionPage() {
 
   // Initial data fetch
   useEffect(() => {
-    fetchFamilies()
-    fetchDonationCategories()
+    const loadInitialData = async () => {
+      setLoading(true, "Loading SANDA Collection data...")
+      try {
+        await Promise.all([
+          fetchFamilies(),
+          fetchDonationCategories()
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadInitialData()
   }, [])
 
   // Button label logic
@@ -412,7 +433,16 @@ export default function SandaCollectionPage() {
 
           {/* Family Results */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {families.map((family) => (
+            {isDataLoading ? (
+              <div className="lg:col-span-2 flex justify-center py-12">
+                <LoadingSpinner text="Loading families..." />
+              </div>
+            ) : families.length === 0 ? (
+              <div className="lg:col-span-2 text-center py-12 text-muted-foreground">
+                {searchTerm ? 'No families found matching your search.' : 'No families available.'}
+              </div>
+            ) : (
+              families.map((family) => (
               <Card key={family.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -565,16 +595,9 @@ export default function SandaCollectionPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              ))
+            )}
           </div>
-
-          {families.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No families found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria</p>
-            </div>
-          )}
         </div>
       </section>
 
