@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { log } from "console"
 
 export default function ImportPage() {
   const { setLoading } = useLoading()
@@ -105,11 +106,13 @@ export default function ImportPage() {
       const result = await response.json()
 
       if (result.success) {
+        console.log(result.data);
         setImportResult(result.data)
         showAlert("success", result.message)
       } else {
         showAlert("error", result.error)
         if (result.validation_errors) {
+          console.log(result.validation_errors);
           setImportResult({ validation_errors: result.validation_errors })
         }
       }
@@ -274,28 +277,24 @@ export default function ImportPage() {
                 <div>
                   <h4 className="font-medium mb-2">Required Columns:</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• family_code - Unique family code</li>
                     <li>• family_name - Full family name</li>
-                    <li>• head_of_family - Name of family head</li>
+                    <li>• id_card_no - NIC card number of family head</li>
                     <li>• phone - Contact phone number</li>
-                    <li>• email - Valid email address</li>
-                    <li>• address - Full address</li>
+                    <li>• sanda_amount - Amount of sanda</li>
                   </ul>
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">Optional Columns:</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• postal_code - Postal/ZIP code</li>
-                    <li>• city - City name</li>
-                    <li>• country - Country (default: Canada)</li>
-                    <li>• notes - Additional notes</li>
+                    <li>• arrears - Arrears amount</li>
                   </ul>
                 </div>
 
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>Tip:</strong> Use the template to ensure proper formatting. Family IDs will be
-                    auto-generated during import.
+                    <strong>Tip:</strong> Use the template to ensure proper formatting.
                   </p>
                 </div>
               </CardContent>
@@ -323,7 +322,7 @@ export default function ImportPage() {
                       <div className="text-sm text-green-700">Successful Imports</div>
                     </div>
                     <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{importResult.failed_imports}</div>
+                      <div className="text-2xl font-bold text-red-600">{importResult.validation_errors.length > 0 ? importResult.validation_errors.length : importResult.duplicate_keys.length > 0 ? importResult.duplicate_keys.length : 0}</div>
                       <div className="text-sm text-red-700">Failed Imports</div>
                     </div>
                     <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -333,39 +332,49 @@ export default function ImportPage() {
                   </div>
                 )}
 
-                {importResult.validation_errors && importResult.validation_errors.length > 0 && (
+                
                   <div>
                     <h4 className="font-medium mb-2 text-red-600">Validation Errors:</h4>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {importResult.validation_errors.map((error: string, index: number) => (
+                      {importResult.validation_errors.length > 0 ? (importResult.validation_errors.map((error: string, index: number) => (
                         <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
                           {error}
                         </div>
-                      ))}
+                      ))) : importResult.duplicate_keys.length > 0 ? (importResult.duplicate_keys.map((error: string, index: number) => (
+                        <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                          {error}
+                        </div>
+                      ))) : (
+                        <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                          No validation errors
+                        </div>
+                      ) }
                     </div>
                   </div>
-                )}
 
-                {importResult.imported_families && (
                   <div>
                     <h4 className="font-medium mb-2">Sample Imported Families:</h4>
                     <div className="space-y-2">
-                      {importResult.imported_families.map((family: any, index: number) => (
+                      
+                      {importResult.imported_families.length > 0? (importResult.imported_families.map((family: any, index: number) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <div>
-                            <div className="font-medium">{family.family_name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {family.family_id} • {family.head_of_family}
-                            </div>
+                            <div className="font-medium">{family.family_code}</div>
+                            
                           </div>
                           <Badge variant="default" className="bg-green-100 text-green-800">
                             Imported
                           </Badge>
                         </div>
-                      ))}
+                      )))
+                      : (<div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div>
+                            <div className="font-medium">No records have been imported.</div>
+                          </div>
+                        </div>)
+                      }
                     </div>
-                  </div>
-                )}
+                  </div>   
 
                 {importResult.successful_imports > 0 && (
                   <div className="flex justify-center pt-4">

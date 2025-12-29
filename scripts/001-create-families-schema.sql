@@ -3,21 +3,12 @@
 
 -- Families table to store family information
 CREATE TABLE IF NOT EXISTS families (
-    id SERIAL PRIMARY KEY,
-    family_id VARCHAR(20) UNIQUE NOT NULL, -- Custom family identifier (e.g., FAM001)
+    family_code VARCHAR(20) UNIQUE NOT NULL, -- Custom family identifier (e.g., FAM001)
     family_name VARCHAR(100) NOT NULL,
-    head_of_family VARCHAR(100) NOT NULL,
+    id_card_no VARCHAR(10) NOT NULL,
     phone VARCHAR(20),
-    email VARCHAR(100),
-    address TEXT,
-    postal_code VARCHAR(10),
-    city VARCHAR(50),
-    country VARCHAR(50) DEFAULT 'Canada',
-    membership_status VARCHAR(20) DEFAULT 'active', -- active, inactive, suspended
-    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	sanda_amount VARCHAR(100),
+	arrears VARCHAR(100)
 );
 
 -- Family members table for tracking individual family members
