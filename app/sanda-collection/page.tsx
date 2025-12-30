@@ -43,18 +43,12 @@ export default function SandaCollectionPage() {
   const [selectedFamily, setSelectedFamily] = useState<FamilyType | null>(null)
   const [isDataLoading, setIsDataLoading] = useState(true)
   type FamilyType = {
-    id: string
-    family_id: string
+    family_code: string
     family_name: string
-    head_of_family: string
+    id_card_no: string
     phone: string
-    email?: string
-    address: string
-    membership_status: string
-    members?: any[]
-    total_donations?: number
-    last_donation?: string
-    // Add other fields as needed
+    sanda_amount: string
+    arrears?: string
   }
   const [families, setFamilies] = useState<FamilyType[]>([])
   type DonationCategoryType = {
@@ -81,15 +75,12 @@ export default function SandaCollectionPage() {
   })
   const [familyIdInput, setFamilyIdInput] = useState("")
   type FamilyDetailsType = {
-    family_id: string
+    family_code: string
     family_name: string
-    head_of_family: string
+    id_card_no: string
     phone: string
-    address: string
-    arrears: number
-    amount_due: number
-    arrears_per_month: { [month: string]: number }
-    // Add other fields as needed
+    sanda_amount: string
+    arrears?: number
   }
   const [familyDetails, setFamilyDetails] = useState<FamilyDetailsType | null>(null)
   const [familyError, setFamilyError] = useState("")
@@ -198,7 +189,7 @@ export default function SandaCollectionPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          family_id: familyDetails.family_id, // Use familyDetails here
+          family_code: familyDetails.family_code, // Use familyDetails here
           amount: Number.parseFloat(paymentForm.amount),
           category_id: Number.parseInt(paymentForm.category),
           payment_method: paymentForm.payment_method,
@@ -238,14 +229,14 @@ export default function SandaCollectionPage() {
   }
 
   // Fetch family details by ID
-  const fetchFamilyDetails = async (familyId: string) => {
-    if (!familyId) {
+  const fetchFamilyDetails = async (family_code: string) => {
+    if (!family_code) {
       setFamilyDetails(null)
       setFamilyError("")
       return
     }
     try {
-      const response = await fetch(`/api/families/${familyId}`)
+      const response = await fetch(`/api/families/${family_code}`)
       const result = await response.json()
       if (result.success && result.data) {
         setFamilyDetails(result.data)
@@ -436,21 +427,15 @@ export default function SandaCollectionPage() {
               </div>
             ) : (
               families.map((family) => (
-              <Card key={family.id} className="hover:shadow-lg transition-shadow">
+              <Card key={family.family_code} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
                       <CardDescription className="text-sm">
-                        ID: {family.family_id} • Head: {family.head_of_family}
+                        FAMILY CODE: {family.family_code} • Head: {family.family_name}
                       </CardDescription>
                     </div>
-                    <Badge
-                      variant={family.membership_status === "active" ? "default" : "secondary"}
-                      className={family.membership_status === "active" ? "bg-green-100 text-green-800" : ""}
-                    >
-                      {family.membership_status}
-                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -460,27 +445,19 @@ export default function SandaCollectionPage() {
                       {family.phone}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="w-4 h-4" />
-                      {family.email}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      {family.address}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      {family.members?.length || 0} members
+                      {family.id_card_no}
                     </div>
                     <div className="pt-2 border-t border-border">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">Total Donations:</span>
+                        <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
                         <span className="font-semibold text-primary">
-                          ${family.total_donations?.toFixed(2) || "0.00"}
+                          ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
                         </span>
                       </div>
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-sm text-muted-foreground">Last Donation:</span>
-                        <span className="text-sm">{family.last_donation || "Never"}</span>
+                        <span className="text-sm text-muted-foreground">Arrears:</span>
+                        <span className="text-sm">{family.arrears || "0.00"}</span>
                       </div>
                       <div className="flex gap-2">
                         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
@@ -600,7 +577,7 @@ export default function SandaCollectionPage() {
           <h2 className="text-2xl font-bold mb-4 text-primary">SANDA Collection Form</h2>
           <form onSubmit={handlePaymentSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Family ID</label>
+              <label className="block text-sm font-medium mb-1">Family Code</label>
               <input
                 type="text"
                 name="family_id"
@@ -624,27 +601,15 @@ export default function SandaCollectionPage() {
                       {familyDetails.family_name}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      <span className="font-medium text-green-700">Head of Family:</span> {familyDetails.head_of_family}
+                      <span className="font-medium text-green-700">Head of Family:</span> {familyDetails.family_name}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
                       <Phone className="inline w-4 h-4 mr-1 text-green-600" />
                       {familyDetails.phone}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      <MapPin className="inline w-4 h-4 mr-1 text-green-600" />
-                      {familyDetails.address}
-                    </div>
-                  </div>
-                  <div className="flex-1 mt-4 md:mt-0">
-                    <div className="bg-green-100 rounded-lg p-3">
-                      <div className="font-semibold text-green-800 mb-2">Arrears Per Month:</div>
-                      <ul className="ml-4 list-disc text-green-700 text-sm">
-                        {Object.entries(familyDetails.arrears_per_month).map(([month, amount]) => (
-                          <li key={month}>
-                            <span className="font-medium">{month}:</span> LKR {amount}
-                          </li>
-                        ))}
-                      </ul>
+                      <Users className="inline w-4 h-4 mr-1 text-green-600" />
+                      {familyDetails.id_card_no}
                     </div>
                   </div>
                 </div>
@@ -656,7 +621,7 @@ export default function SandaCollectionPage() {
                   </div>
                   <div className="flex-1">
                     <div className="text-base font-semibold text-green-900">
-                      <span className="text-green-700">Amount Due:</span> <span className="ml-2">LKR {familyDetails.amount_due}</span>
+                      <span className="text-green-700">SANDA AMOUNT:</span> <span className="ml-2">LKR {familyDetails.sanda_amount}</span>
                     </div>
                   </div>
                 </div>
