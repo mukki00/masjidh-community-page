@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { group } from "console"
 
 export default function SandaCollectionPage() {
   const { setLoading } = useLoading()
@@ -57,6 +58,7 @@ export default function SandaCollectionPage() {
     // Add other fields if needed
   }
   const [donationCategories, setDonationCategories] = useState<DonationCategoryType[]>([])
+  const [slideIndex, setSlideIndex] = useState(0)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
@@ -95,6 +97,8 @@ export default function SandaCollectionPage() {
 
       if (result.success) {
         setFamilies(result.data)
+      }else {
+        setFamilies([])
       }
     } catch (error) {
       console.error("Error fetching families:", error)
@@ -414,160 +418,146 @@ export default function SandaCollectionPage() {
               </Button>
             </div>
           </div>
-
           {/* Family Results */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
             {isDataLoading ? (
-              <div className="lg:col-span-2 flex justify-center py-12">
+              <div className="flex justify-center py-12">
                 <LoadingSpinner text="Loading families..." />
               </div>
             ) : families.length === 0 ? (
-              <div className="lg:col-span-2 text-center py-12 text-muted-foreground">
-                {searchTerm ? 'No families found matching your search.' : 'No families available.'}
+              <div className="text-center py-12 text-muted-foreground">
+                {searchTerm ? "No families found matching your search." : "No families available."}
               </div>
             ) : (
-              families.map((family) => (
-              <Card key={family.family_code} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
-                      <CardDescription className="text-sm">
-                        FAMILY CODE: {family.family_code} • Head: {family.family_name}
-                      </CardDescription>
+              (() => {
+                // chunk families into slides of 2
+                // const slides: FamilyType[][] = []
+                // for (let i = 0; i < families.length; i += 2) slides.push(families.slice(i, i + 3))
+                const CARD_WIDTH = 320 // matches w-80
+                const GAP = 36 // gap-6 ~= 24px
+                const visibleCount = 3
+                const maxIndex = Math.max(0, families.length - visibleCount)
+                const prev = () => setSlideIndex((s) => Math.max(0, s - 1))
+                const next = () => setSlideIndex((s) => Math.min(maxIndex, s + 1))
+
+                return (
+                  <div className="relative">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">Showing families</div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4" />
-                      {family.phone}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      {family.id_card_no}
-                    </div>
-                    <div className="pt-2 border-t border-border">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
-                        <span className="font-semibold text-primary">
-                          ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-sm text-muted-foreground">Arrears:</span>
-                        <span className="text-sm">{family.arrears || "0.00"}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="flex-1"
-                              onClick={() => setSelectedFamily(family)}
-                              disabled={isProcessing}
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              New Donation
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Process Donation</DialogTitle>
-                              <DialogDescription>
-                                Recording donation for {selectedFamily?.family_name}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                              <div>
-                                <Label htmlFor="amount">Amount ($)</Label>
-                                <Input
-                                  id="amount"
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  placeholder="0.00"
-                                  value={paymentForm.amount}
-                                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                                  required
-                                  disabled={isProcessing}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="category">Donation Category</Label>
-                                <Select
-                                  value={paymentForm.category}
-                                  onValueChange={(value) => setPaymentForm({ ...paymentForm, category: value })}
-                                  disabled={isProcessing}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select category" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {donationCategories.map((category) => (
-                                      <SelectItem key={category.id} value={category.id.toString()}>
-                                        {category.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label htmlFor="payment_method">Payment Method</Label>
-                                <Select
-                                  value={paymentForm.payment_method}
-                                  onValueChange={(value) => setPaymentForm({ ...paymentForm, payment_method: value })}
-                                  disabled={isProcessing}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select payment method" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="cash">Cash</SelectItem>
-                                    <SelectItem value="card">Credit/Debit Card</SelectItem>
-                                    <SelectItem value="cheque">Cheque</SelectItem>
-                                    <SelectItem value="online">Online Transfer</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label htmlFor="notes">Notes (Optional)</Label>
-                                <Textarea
-                                  id="notes"
-                                  placeholder="Additional notes..."
-                                  value={paymentForm.notes}
-                                  onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                                  disabled={isProcessing}
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => setIsPaymentDialogOpen(false)}
-                                  className="flex-1"
-                                  disabled={isProcessing}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button type="submit" className="flex-1" disabled={isProcessing}>
-                                  {isProcessing ? "Processing..." : "Process & Generate Receipt"}
-                                </Button>
-                              </div>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                        <Button variant="outline" size="sm">
-                          View History
+
+                    {/* big slider viewport */}
+                    <div className="relative overflow-hidden h-96 sm:h-80 md:h-96 lg:h-[28rem]">
+                      {/* left control (overlayed) */}
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 z-20">
+                        <Button variant="ghost" size="icon" className="h-50 w-10" onClick={prev} disabled={slideIndex === 0} aria-label="Previous slide">
+                          ‹
                         </Button>
                       </div>
+                      {/* right control (overlayed) */}
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 z-20">
+                        <Button variant="ghost" size="icon" className="h-50 w-10" onClick={next} disabled={slideIndex >= maxIndex} aria-label="Next slide">
+                          ›
+                        </Button>
+                      </div>
+
+                      <div
+                        className="flex transition-transform duration-300 h-full"
+                        style={{ transform: `translateX(-${slideIndex * (CARD_WIDTH + GAP)}px)` }}
+                      >
+                        {families.map((family) => (
+                         <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
+                                <Card key={family.family_code} className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
+                                  <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
+                                        <CardDescription className="text-sm">
+                                          FAMILY CODE: {family.family_code}
+                                        </CardDescription>
+                                        <CardDescription className="text-sm">
+                                          Head: {family.family_name}
+                                        </CardDescription>
+                                      </div>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent className="flex-1 flex flex-col justify-between">
+                                    <div className="space-y-3">
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Phone className="w-4 h-4" />
+                                        {family.phone}
+                                      </div>
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Users className="w-4 h-4" />
+                                        {family.id_card_no}
+                                      </div>
+                                    </div>
+                                    <div className="pt-2 border-t border-border mt-4">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
+                                        <span className="font-semibold text-primary">
+                                          ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center mb-4">
+                                        <span className="text-sm text-muted-foreground">Arrears:</span>
+                                        <span className="text-sm">{family.arrears || "0.00"}</span>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                                          <DialogTrigger asChild>
+                                            <Button
+                                              className="flex-1"
+                                              onClick={() => setSelectedFamily(family)}
+                                              disabled={isProcessing}
+                                            >
+                                              <Plus className="w-4 h-4 mr-2" />
+                                              New Donation
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent className="sm:max-w-md">
+                                            <DialogHeader>
+                                              <DialogTitle>Process Donation</DialogTitle>
+                                              <DialogDescription>
+                                                Recording donation for {selectedFamily?.family_name}
+                                              </DialogDescription>
+                                            </DialogHeader>
+                                            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                                              {/* ...existing form fields... */}
+                                              <div className="flex gap-2">
+                                                <Button
+                                                  type="button"
+                                                  variant="outline"
+                                                  onClick={() => setIsPaymentDialogOpen(false)}
+                                                  className="flex-1"
+                                                  disabled={isProcessing}
+                                                >
+                                                  Cancel
+                                                </Button>
+                                                <Button type="submit" className="flex-1" disabled={isProcessing}>
+                                                  {isProcessing ? "Processing..." : "Process & Generate Receipt"}
+                                                </Button>
+                                              </div>
+                                            </form>
+                                          </DialogContent>
+                                        </Dialog>
+                                        <Button variant="outline" size="sm">
+                                          View History
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              ))
+                 )
+              })()
             )}
-          </div>
+          </div>          
+
         </div>
       </section>
 
