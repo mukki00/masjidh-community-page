@@ -61,6 +61,7 @@ export default function SandaCollectionPage() {
   const [slideIndex, setSlideIndex] = useState(0)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [selectedFamilyCode, setSelectedFamilyCode] = useState<string | null>(null)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
   const [lastReceiptNumber, setLastReceiptNumber] = useState("")
   const [dailyStats, setDailyStats] = useState({
@@ -465,7 +466,9 @@ export default function SandaCollectionPage() {
                         className="flex transition-transform duration-300 h-full"
                         style={{ transform: `translateX(-${slideIndex * (CARD_WIDTH + GAP)}px)` }}
                       >
-                        {families.map((family) => (
+                        {families.map((family) => {
+                          const isSelected = selectedFamilyCode === family.family_code
+                          return (
                          <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
                                 <Card key={family.family_code} className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
                                   <CardHeader>
@@ -478,6 +481,28 @@ export default function SandaCollectionPage() {
                                         <CardDescription className="text-sm">
                                           Head: {family.family_name}
                                         </CardDescription>
+                                      </div>
+                                      <div className="ml-4">
+                                        <Button
+                                          size="sm"
+                                          variant={isSelected ? "secondary" : "outline"}
+                                          onClick={() => {
+                                            setSelectedFamily(family)
+                                            setSelectedFamilyCode(family.family_code)
+                                          }}
+                                          aria-label={`Select ${family.family_name}`}
+                                          className="h-8 inline-flex items-center justify-center gap-2"
+                                          disabled={isProcessing}
+                                        >
+                                          {isSelected ? (
+                                            <>
+                                              <CheckCircle className="w-4 h-4 text-green-600" />
+                                              <span>Selected</span>
+                                            </>
+                                          ) : (
+                                            <span>Select</span>
+                                          )}
+                                        </Button>
                                       </div>
                                     </div>
                                   </CardHeader>
@@ -549,7 +574,7 @@ export default function SandaCollectionPage() {
                                   </CardContent>
                                 </Card>
                           </div>
-                        ))}
+                        )})}
                       </div>
                     </div>
                   </div>
