@@ -196,17 +196,16 @@ export default function SandaCollectionPage() {
         body: JSON.stringify({
           family_code: familyDetails.family_code, // Use familyDetails here
           amount: Number.parseFloat(paymentForm.amount),
-          category_id: Number.parseInt(paymentForm.category),
           payment_method: paymentForm.payment_method,
           notes: paymentForm.notes,
-          collected_by: "Current User", // In real app, get from auth
+          collected_by: "Admin", // In real app, get from auth
         }),
       })
 
       const result = await response.json()
 
       if (result.success) {
-        const receiptNumber = result.data.donation.receipt_number
+        const receiptNumber = result.data.receipt_number;
         setLastReceiptNumber(receiptNumber)
         showAlert("success", `Donation processed successfully! Receipt: ${receiptNumber}`)
         setIsPaymentDialogOpen(false)

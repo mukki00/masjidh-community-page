@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-
+import { neon } from "@neondatabase/serverless";
 // Mock donation storage - in real app this would be PostgreSQL
 const mockDonations: any[] = []
 let receiptCounter = 1000
@@ -17,58 +17,76 @@ function generateDonationId(): string {
 // Generate unique receipt number
 function generateReceiptNumber(): string {
   receiptCounter++
-  return `REC-${receiptCounter}`
+  return `BGM-SANDA-${receiptCounter}`
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { family_id, amount, category_id, payment_method, notes, collected_by } = body
-
+    const { family_code, amount, payment_method, notes, collected_by } = body
     // Validation
-    if (!family_id || !amount || !category_id || !payment_method) {
+    if (!family_code || !amount || !payment_method || !collected_by) {
+      console.error("Missing required fields:", body)
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
-    if (amount <= 0) {
+    if (parseFloat(amount) <= 0) {
+      console.log("Invalid amount:", amount)
       return NextResponse.json({ success: false, error: "Amount must be greater than 0" }, { status: 400 })
     }
 
-    // Create donation record
-    const donation = {
-      id: mockDonations.length + 1,
-      donation_id: generateDonationId(),
-      family_id: Number.parseInt(family_id),
-      category_id: Number.parseInt(category_id),
-      amount: Number.parseFloat(amount),
-      payment_method,
-      payment_status: "completed",
-      receipt_number: generateReceiptNumber(),
-      collection_date: new Date().toISOString().split("T")[0],
-      collected_by: collected_by || "System User",
-      notes: notes || null,
-      is_anonymous: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      return NextResponse.json({ success: false, error: "Database connection string not configured" }, { status: 500 });
     }
 
-    // In real app, this would be a database transaction
-    mockDonations.push(donation)
+    const client = neon(connectionString);
+    
+    const receipt_number = "BGM-SANDA-1008";
+    const transaction_date = new Date();
+    const created_at = new Date();
+    const updated_at = new Date();
 
-    // Update daily collection summary (mock)
-    const today = new Date().toISOString().split("T")[0]
+    const result = await client.query(
+      `INSERT INTO public.payment(
+        family_code, amount, payment_method, notes, collected_by, receipt_number, transaction_date, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, receipt_number, family_code, amount, transaction_date`,
+      [
+        family_code,
+        parseFloat(amount),
+        payment_method,
+        notes || null,
+        collected_by,
+        receipt_number,
+        transaction_date,
+        created_at,
+        updated_at
+      ]
+    );
+    
+    if (!result || result.length === 0) {
+      return NextResponse.json({ success: false, error: "Failed to insert payment record" }, { status: 500 });
+    }
+
+    const payment = result[0];
 
     return NextResponse.json({
       success: true,
       data: {
-        donation,
-        receipt_url: `/api/receipts/${donation.receipt_number}`,
-        message: "Donation processed successfully",
-      },
-    })
+        id: payment.id,
+        family_code: payment.family_code,
+        amount: payment.amount,
+        payment_method,
+        receipt_number: payment.receipt_number,
+        transaction_date: payment.transaction_date,
+        message: "Payment recorded successfully"
+      }
+    }, { status: 201 });
+
   } catch (error) {
-    console.error("Error processing donation:", error)
-    return NextResponse.json({ success: false, error: "Failed to process donation" }, { status: 500 })
+    console.error("Error processing payment:", error)
+    return NextResponse.json({ success: false, error: "Failed to process payment" }, { status: 500 })
   }
 }
 
