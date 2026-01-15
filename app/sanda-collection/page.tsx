@@ -682,8 +682,8 @@ export default function SandaCollectionPage() {
             </div>
             <button
               type="submit"
-              className="bg-primary text-white px-6 py-2 rounded font-semibold hover:bg-primary/90"
-              disabled={isProcessing}
+              className="bg-primary text-white px-6 py-2 rounded font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isProcessing || !familyDetails || !!familyError}
             >
               {isProcessing ? "Processing..." : getButtonLabel()}
             </button>
