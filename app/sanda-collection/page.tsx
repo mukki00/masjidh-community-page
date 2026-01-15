@@ -290,6 +290,12 @@ export default function SandaCollectionPage() {
     return "Collect"
   }
 
+  const handleSelectFamily = (family: FamilyType) => {
+    setSelectedFamily(family)
+    setSelectedFamilyCode(family.family_code)
+    setFamilyIdInput(family.family_code) // Auto-populate the form
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
@@ -469,8 +475,8 @@ export default function SandaCollectionPage() {
                         {families.map((family) => {
                           const isSelected = selectedFamilyCode === family.family_code
                           return (
-                         <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
-                                <Card key={family.family_code} className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
+                        <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
+                                <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
                                   <CardHeader>
                                     <div className="flex items-start justify-between">
                                       <div>
@@ -486,10 +492,7 @@ export default function SandaCollectionPage() {
                                         <Button
                                           size="sm"
                                           variant={isSelected ? "secondary" : "outline"}
-                                          onClick={() => {
-                                            setSelectedFamily(family)
-                                            setSelectedFamilyCode(family.family_code)
-                                          }}
+                                          onClick={() => handleSelectFamily(family)}
                                           aria-label={`Select ${family.family_name}`}
                                           className="h-8 inline-flex items-center justify-center gap-2"
                                           disabled={isProcessing}
