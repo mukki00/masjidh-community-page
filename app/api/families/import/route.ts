@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { log } from "console";
 // CSV parsing utility
 function parseCSV(csvText: string): { families: any[]; errors: string[] } {
   const lines = csvText.trim().split("\n")
