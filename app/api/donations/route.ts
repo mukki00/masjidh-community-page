@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless";
+import { log } from "console";
 // Mock donation storage - in real app this would be PostgreSQL
 const mockDonations: any[] = []
 let receiptCounter = 1000
@@ -14,10 +15,31 @@ function generateDonationId(): string {
   return `DON-${year}${month}${day}-${sequence}`
 }
 
-// Generate unique receipt number
-function generateReceiptNumber(): string {
-  receiptCounter++
-  return `BGM-SANDA-${receiptCounter}`
+// Generate unique receipt number by calling the receipt number generation API
+async function generateReceiptNumber(family_code: string): Promise<string> {
+  try {
+    // Use absolute URL for server-side API call
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/receipts/generate-number`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ family_id: family_code }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate receipt number');
+    }
+    
+    const data = await response.json();
+    return data.data.receipt_number;
+  } catch (error) {
+    console.error('Error calling receipt number API:', error);
+    // Fallback to local generation if API fails
+    receiptCounter++;
+    return `BGM-SANDA-${family_code}-${receiptCounter}`;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -41,8 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     const client = neon(connectionString);
-    
-    const receipt_number = "BGM-SANDA-1008";
+    const receipt_number = await generateReceiptNumber(family_code);
+    console.log(receipt_number);
     const transaction_date = new Date();
     const created_at = new Date();
     const updated_at = new Date();

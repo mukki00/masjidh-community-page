@@ -98,7 +98,7 @@ export default function SandaCollectionPage() {
 
       if (result.success) {
         setFamilies(result.data)
-      }else {
+      } else {
         setFamilies([])
       }
     } catch (error) {
@@ -211,6 +211,22 @@ export default function SandaCollectionPage() {
         setIsPaymentDialogOpen(false)
         setPaymentForm({ amount: "", category: "", payment_method: "", notes: "" })
 
+        // if (receiptNumber) {
+        //   try {
+        //     const response = await fetch("/api/receipts/generate-number", {
+        //       method: "SAVE",
+        //       headers: {
+        //         "Content-Type": "application/json",
+        //       },
+        //       body: JSON.stringify({
+        //         receipt_number: receiptNumber
+        //       }),
+        //     })
+        //   } catch (error) {
+        //   }
+        // }
+
+
         // Update daily stats
         setDailyStats((prev) => ({
           ...prev,
@@ -278,7 +294,7 @@ export default function SandaCollectionPage() {
         setLoading(false)
       }
     }
-    
+
     loadInitialData()
   }, [])
 
@@ -474,116 +490,117 @@ export default function SandaCollectionPage() {
                         {families.map((family) => {
                           const isSelected = selectedFamilyCode === family.family_code
                           return (
-                        <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
-                                <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
-                                  <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                      <div>
-                                        <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
-                                        <CardDescription className="text-sm">
-                                          FAMILY CODE: {family.family_code}
-                                        </CardDescription>
-                                        <CardDescription className="text-sm">
-                                          Head: {family.family_name}
-                                        </CardDescription>
-                                      </div>
-                                      <div className="ml-4">
-                                        <Button
-                                          size="sm"
-                                          variant={isSelected ? "secondary" : "outline"}
-                                          onClick={() => handleSelectFamily(family)}
-                                          aria-label={`Select ${family.family_name}`}
-                                          className="h-8 inline-flex items-center justify-center gap-2"
-                                          disabled={isProcessing}
-                                        >
-                                          {isSelected ? (
-                                            <>
-                                              <CheckCircle className="w-4 h-4 text-green-600" />
-                                              <span>Selected</span>
-                                            </>
-                                          ) : (
-                                            <span>Select</span>
-                                          )}
-                                        </Button>
-                                      </div>
+                            <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
+                              <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
+                                      <CardDescription className="text-sm">
+                                        FAMILY CODE: {family.family_code}
+                                      </CardDescription>
+                                      <CardDescription className="text-sm">
+                                        Head: {family.family_name}
+                                      </CardDescription>
                                     </div>
-                                  </CardHeader>
-                                  <CardContent className="flex-1 flex flex-col justify-between">
-                                    <div className="space-y-3">
-                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Phone className="w-4 h-4" />
-                                        {family.phone}
-                                      </div>
-                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Users className="w-4 h-4" />
-                                        {family.id_card_no}
-                                      </div>
+                                    <div className="ml-4">
+                                      <Button
+                                        size="sm"
+                                        variant={isSelected ? "secondary" : "outline"}
+                                        onClick={() => handleSelectFamily(family)}
+                                        aria-label={`Select ${family.family_name}`}
+                                        className="h-8 inline-flex items-center justify-center gap-2"
+                                        disabled={isProcessing}
+                                      >
+                                        {isSelected ? (
+                                          <>
+                                            <CheckCircle className="w-4 h-4 text-green-600" />
+                                            <span>Selected</span>
+                                          </>
+                                        ) : (
+                                          <span>Select</span>
+                                        )}
+                                      </Button>
                                     </div>
-                                    <div className="pt-2 border-t border-border mt-4">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
-                                        <span className="font-semibold text-primary">
-                                          ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between items-center mb-4">
-                                        <span className="text-sm text-muted-foreground">Arrears:</span>
-                                        <span className="text-sm">{family.arrears || "0.00"}</span>
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                                          <DialogTrigger asChild>
-                                            <Button
-                                              className="flex-1"
-                                              onClick={() => setSelectedFamily(family)}
-                                              disabled={isProcessing}
-                                            >
-                                              <Plus className="w-4 h-4 mr-2" />
-                                              New Donation
-                                            </Button>
-                                          </DialogTrigger>
-                                          <DialogContent className="sm:max-w-md">
-                                            <DialogHeader>
-                                              <DialogTitle>Process Donation</DialogTitle>
-                                              <DialogDescription>
-                                                Recording donation for {selectedFamily?.family_name}
-                                              </DialogDescription>
-                                            </DialogHeader>
-                                            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                                              {/* ...existing form fields... */}
-                                              <div className="flex gap-2">
-                                                <Button
-                                                  type="button"
-                                                  variant="outline"
-                                                  onClick={() => setIsPaymentDialogOpen(false)}
-                                                  className="flex-1"
-                                                  disabled={isProcessing}
-                                                >
-                                                  Cancel
-                                                </Button>
-                                                <Button type="submit" className="flex-1" disabled={isProcessing}>
-                                                  {isProcessing ? "Processing..." : "Process & Generate Receipt"}
-                                                </Button>
-                                              </div>
-                                            </form>
-                                          </DialogContent>
-                                        </Dialog>
-                                        <Button variant="outline" size="sm">
-                                          View History
-                                        </Button>
-                                      </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="flex-1 flex flex-col justify-between">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Phone className="w-4 h-4" />
+                                      {family.phone}
                                     </div>
-                                  </CardContent>
-                                </Card>
-                          </div>
-                        )})}
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Users className="w-4 h-4" />
+                                      {family.id_card_no}
+                                    </div>
+                                  </div>
+                                  <div className="pt-2 border-t border-border mt-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
+                                      <span className="font-semibold text-primary">
+                                        ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-4">
+                                      <span className="text-sm text-muted-foreground">Arrears:</span>
+                                      <span className="text-sm">{family.arrears || "0.00"}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                                        <DialogTrigger asChild>
+                                          <Button
+                                            className="flex-1"
+                                            onClick={() => setSelectedFamily(family)}
+                                            disabled={isProcessing}
+                                          >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            New Donation
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md">
+                                          <DialogHeader>
+                                            <DialogTitle>Process Donation</DialogTitle>
+                                            <DialogDescription>
+                                              Recording donation for {selectedFamily?.family_name}
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                                            {/* ...existing form fields... */}
+                                            <div className="flex gap-2">
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => setIsPaymentDialogOpen(false)}
+                                                className="flex-1"
+                                                disabled={isProcessing}
+                                              >
+                                                Cancel
+                                              </Button>
+                                              <Button type="submit" className="flex-1" disabled={isProcessing}>
+                                                {isProcessing ? "Processing..." : "Process & Generate Receipt"}
+                                              </Button>
+                                            </div>
+                                          </form>
+                                        </DialogContent>
+                                      </Dialog>
+                                      <Button variant="outline" size="sm">
+                                        View History
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
-                 )
+                )
               })()
             )}
-          </div>          
+          </div>
 
         </div>
       </section>
