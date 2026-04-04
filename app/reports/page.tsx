@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { AuthGuard } from "@/components/auth-guard"
 
 // Mock data for reports
 const mockDailyData = {
@@ -150,6 +151,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
   }, [selectedDate])
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <Header />
@@ -515,5 +517,6 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
       </section>
       <Footer />
     </div>
+    </AuthGuard>
   )
 }

@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { AuthGuard } from "@/components/auth-guard"
 import { group } from "console"
 
 export default function SandaCollectionPage() {
@@ -312,6 +313,7 @@ export default function SandaCollectionPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <Header />
@@ -709,5 +711,6 @@ export default function SandaCollectionPage() {
 
       <Footer />
     </div>
+    </AuthGuard>
   )
 }
