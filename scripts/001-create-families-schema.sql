@@ -1,25 +1,39 @@
 -- SANDA Collection Database Schema
--- Create tables for family management and donation tracking
+-- Create tables for family management and payment tracking
+-- Database: Neon PostgreSQL (deployed on Vercel)
 
 -- Families table to store family information
 CREATE TABLE IF NOT EXISTS families (
-    family_code VARCHAR(20) UNIQUE NOT NULL, -- Custom family identifier (e.g., FAM001)
+    family_code VARCHAR(20) UNIQUE NOT NULL,   -- Custom family identifier (e.g., FAM001)
     family_name VARCHAR(100) NOT NULL,
     id_card_no VARCHAR(10) NOT NULL,
     phone VARCHAR(20),
-	sanda_amount VARCHAR(100),
-	arrears VARCHAR(100)
+    sanda_amount VARCHAR(100),                 -- Monthly SANDA contribution target
+    arrears VARCHAR(100)                       -- Outstanding balance
 );
 
--- Family members table for tracking individual family members
-CREATE TABLE IF NOT EXISTS family_members (
+-- Receipts table to track issued receipts
+CREATE TABLE IF NOT EXISTS receipts (
+    id SERIAL PRIMARY KEY,                     -- Auto-increment, used for receipt number generation
+    receipt_number VARCHAR(50) UNIQUE NOT NULL, -- Format: BGM-SANDA-{family_code}-{padded_id}
+    receipt_date TIMESTAMP NOT NULL,
+    receipt_html TEXT,                          -- Stored HTML content of the receipt
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment table for recording donation/collection transactions
+CREATE TABLE IF NOT EXISTS payment (
     id SERIAL PRIMARY KEY,
-    family_id INTEGER REFERENCES families(id) ON DELETE CASCADE,
-    member_name VARCHAR(100) NOT NULL,
-    relationship VARCHAR(50), -- head, spouse, child, parent, etc.
-    age_group VARCHAR(20), -- adult, child, senior
-    gender VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    family_code VARCHAR(20) NOT NULL REFERENCES families(family_code),
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL,       -- cash, card, cheque, online
+    receipt_number VARCHAR(50) UNIQUE,
+    collected_by VARCHAR(100),                 -- Staff member who collected
+    transaction_date TIMESTAMP NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Donation categories table
@@ -31,25 +45,7 @@ CREATE TABLE IF NOT EXISTS donation_categories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Donations/Collections table
-CREATE TABLE IF NOT EXISTS donations (
-    id SERIAL PRIMARY KEY,
-    donation_id VARCHAR(30) UNIQUE NOT NULL, -- Custom donation ID (e.g., DON-2024-001)
-    family_id INTEGER REFERENCES families(id) ON DELETE SET NULL,
-    category_id INTEGER REFERENCES donation_categories(id),
-    amount DECIMAL(10,2) NOT NULL,
-    payment_method VARCHAR(20) NOT NULL, -- cash, card, cheque, online
-    payment_status VARCHAR(20) DEFAULT 'completed', -- pending, completed, failed, refunded
-    receipt_number VARCHAR(30) UNIQUE,
-    collection_date DATE NOT NULL,
-    collected_by VARCHAR(100), -- Staff member who collected
-    notes TEXT,
-    is_anonymous BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Daily collection summary table
+-- Daily collection summary table (currently mock in API, reserved for future use)
 CREATE TABLE IF NOT EXISTS daily_collections (
     id SERIAL PRIMARY KEY,
     collection_date DATE UNIQUE NOT NULL,
@@ -63,7 +59,7 @@ CREATE TABLE IF NOT EXISTS daily_collections (
     closed_by VARCHAR(100),
     opened_at TIMESTAMP,
     closed_at TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'open', -- open, closed
+    status VARCHAR(20) DEFAULT 'open',         -- open, closed
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -81,11 +77,12 @@ INSERT INTO donation_categories (category_name, description) VALUES
 ON CONFLICT (category_name) DO NOTHING;
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_families_family_id ON families(family_id);
+CREATE INDEX IF NOT EXISTS idx_families_family_code ON families(family_code);
 CREATE INDEX IF NOT EXISTS idx_families_name ON families(family_name);
-CREATE INDEX IF NOT EXISTS idx_donations_family_id ON donations(family_id);
-CREATE INDEX IF NOT EXISTS idx_donations_date ON donations(collection_date);
-CREATE INDEX IF NOT EXISTS idx_donations_receipt ON donations(receipt_number);
+CREATE INDEX IF NOT EXISTS idx_payment_family_code ON payment(family_code);
+CREATE INDEX IF NOT EXISTS idx_payment_receipt ON payment(receipt_number);
+CREATE INDEX IF NOT EXISTS idx_payment_date ON payment(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_receipts_number ON receipts(receipt_number);
 CREATE INDEX IF NOT EXISTS idx_daily_collections_date ON daily_collections(collection_date);
 
 -- Create updated_at trigger function
@@ -98,8 +95,8 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at
-CREATE TRIGGER update_families_updated_at BEFORE UPDATE ON families
+CREATE TRIGGER update_payment_updated_at BEFORE UPDATE ON payment
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_donations_updated_at BEFORE UPDATE ON donations
+CREATE TRIGGER update_receipts_updated_at BEFORE UPDATE ON receipts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
