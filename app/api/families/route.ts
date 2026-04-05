@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Pool } from "pg";
+import { jwtVerify } from "jose"
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret-change-me")
+
+const DEV_FAMILY_CODES = ['FAM122', 'FAM132', 'FAM142'];
 
 declare global {
   var _pgPool: Pool | undefined;
@@ -13,6 +18,16 @@ const pool: Pool = globalThis._pgPool ??
 
 if (!globalThis._pgPool) globalThis._pgPool = pool;
 
+async function getUserRole(request: NextRequest): Promise<string | null> {
+  try {
+    const token = request.cookies.get("auth-token")?.value
+    if (!token) return null
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    return (payload.role as string) || null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   if (!process.env.DATABASE_URL) {
@@ -20,6 +35,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const userRole = await getUserRole(request);
     const url = new URL(request.url);
     const search = url.searchParams.get("search")?.trim();
 
@@ -27,16 +43,26 @@ export async function GET(request: NextRequest) {
       SELECT family_code, family_name, id_card_no, phone, sanda_amount, arrears
       FROM families
     `;
-    const params: string[] = [];
+    const params: (string | string[])[] = [];
+    const conditions: string[] = [];
+
+    // Exclude dev family codes for non-Developer users
+    if (userRole !== "Developer") {
+      params.push(DEV_FAMILY_CODES);
+      conditions.push(`family_code != ALL($${params.length})`);
+    }
 
     if (search && search.length > 0) {
-      query += `
-        WHERE family_code ILIKE $1
-          OR family_name ILIKE $1
-          OR id_card_no ILIKE $1
-          OR phone ILIKE $1
-      `;
       params.push(`%${search}%`);
+      const searchParam = `$${params.length}`;
+      conditions.push(`(family_code ILIKE ${searchParam}
+          OR family_name ILIKE ${searchParam}
+          OR id_card_no ILIKE ${searchParam}
+          OR phone ILIKE ${searchParam})`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ` + conditions.join(` AND `);
     }
 
     query += ` ORDER BY family_code`;

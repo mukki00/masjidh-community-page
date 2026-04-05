@@ -1,5 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { Pool } from "pg";
+import { jwtVerify } from "jose"
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret-change-me")
+
+const DEV_FAMILY_CODES = ['FAM122', 'FAM132', 'FAM142'];
 
 declare global {
   var _pgPool: Pool | undefined;
@@ -12,6 +17,17 @@ const pool: Pool = globalThis._pgPool ??
 
 if (!globalThis._pgPool) globalThis._pgPool = pool;
 
+async function getUserRole(request: NextRequest): Promise<string | null> {
+  try {
+    const token = request.cookies.get("auth-token")?.value
+    if (!token) return null
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    return (payload.role as string) || null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ familyId: string }> }) {
   const resolvedParams = await params;
   const family_code = resolvedParams?.familyId;
@@ -23,6 +39,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ success: false, error: "Missing DATABASE_URL" }, { status: 500 });
+  }
+
+  // Block access to dev families for non-Developer users
+  if (DEV_FAMILY_CODES.includes(family_code)) {
+    const userRole = await getUserRole(request);
+    if (userRole !== "Developer") {
+      return NextResponse.json({ success: false, error: "Family ID not found" }, { status: 404 });
+    }
   }
 
   try {
@@ -52,6 +76,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!family_code) {
     return NextResponse.json({ success: false, error: "Missing familyId param" }, { status: 400 });
+  }
+
+  // Block access to dev families for non-Developer users
+  if (DEV_FAMILY_CODES.includes(family_code)) {
+    const userRole = await getUserRole(request);
+    if (userRole !== "Developer") {
+      return NextResponse.json({ success: false, error: "Family not found" }, { status: 404 });
+    }
   }
 
   if (!process.env.DATABASE_URL) {
