@@ -11,7 +11,7 @@ export default function Footer() {
             <span className="text-lg font-semibold text-foreground">Balangoda Grand Mosque</span>
           </div>
           <p className="text-muted-foreground text-sm">
-            <b>© 2025 Under One Shadow</b> <br/>
+            <b>© 2026 Under One Shadow</b> <br/>
             <i>Sheltering communities with compassion and unity</i>
           </p>
         </div>
