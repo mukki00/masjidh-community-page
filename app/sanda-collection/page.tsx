@@ -241,6 +241,18 @@ export default function SandaCollectionPage() {
         setIsPaymentDialogOpen(false)
         setPaymentForm({ amount: "", category: "", payment_method: "", notes: "" })
 
+        // Auto-print receipt
+        if (result.data.receipt_html) {
+          const printWindow = window.open("", "_blank")
+          if (printWindow) {
+            printWindow.document.write(result.data.receipt_html)
+            printWindow.document.close()
+            printWindow.onload = () => {
+              printWindow.print()
+            }
+          }
+        }
+
         // Refresh stats from DB
         await fetchStats()
 

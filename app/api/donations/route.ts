@@ -252,6 +252,7 @@ export async function POST(request: NextRequest) {
           amount: payment.amount,
           payment_method,
           receipt_number: payment.receipt_number,
+          receipt_html: finalHtml,
           transaction_date: payment.transaction_date,
           previous_arrears: previousArrears,
           new_arrears: newArrears,
