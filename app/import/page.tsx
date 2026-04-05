@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { AuthGuard } from "@/components/auth-guard"
 import { log } from "console"
 
 export default function ImportPage() {
@@ -127,6 +128,7 @@ export default function ImportPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <Header />
@@ -393,5 +395,6 @@ export default function ImportPage() {
       </section>
       <Footer />
     </div>
+    </AuthGuard>
   )
 }

@@ -18,58 +18,20 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
-
-// Mock data for reports
-const mockDailyData = {
-  "2025-01-03": {
-    total_amount: 2450.0,
-    total_transactions: 67,
-    cash_amount: 1200.0,
-    card_amount: 850.0,
-    cheque_amount: 300.0,
-    online_amount: 100.0,
-    status: "closed",
-    opened_by: "Admin User",
-    closed_by: "Admin User",
-    opened_at: "2025-01-03T08:00:00Z",
-    closed_at: "2025-01-03T18:30:00Z",
-  },
-  "2025-01-04": {
-    total_amount: 1875.0,
-    total_transactions: 52,
-    cash_amount: 950.0,
-    card_amount: 625.0,
-    cheque_amount: 200.0,
-    online_amount: 100.0,
-    status: "open",
-    opened_by: "Admin User",
-    closed_by: null,
-    opened_at: "2025-01-04T08:00:00Z",
-    closed_at: null,
-  },
-}
-
-const mockCategoryData = [
-  { name: "General Donation", amount: 1200.0, count: 25, percentage: 35 },
-  { name: "Zakat", amount: 800.0, count: 15, percentage: 23 },
-  { name: "Sadaqah", amount: 600.0, count: 18, percentage: 17 },
-  { name: "Building Fund", amount: 500.0, count: 8, percentage: 15 },
-  { name: "Education Fund", amount: 350.0, count: 6, percentage: 10 },
-]
-
-const mockWeeklyTrend = [
-  { date: "Mon", amount: 1200 },
-  { date: "Tue", amount: 1800 },
-  { date: "Wed", amount: 2200 },
-  { date: "Thu", amount: 1600 },
-  { date: "Fri", amount: 3200 },
-  { date: "Sat", amount: 2800 },
-  { date: "Sun", amount: 2400 },
-]
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function ReportsPage() {
+  type DailyDataType = {
+    total_amount: number
+    total_transactions: number
+    cash_amount: number
+    bank_amount: number
+    opened_at: string | null
+    status: string
+  }
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
-  const [dailyData, setDailyData] = useState(null)
+  const [dailyData, setDailyData] = useState<DailyDataType | null>(null)
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
@@ -77,21 +39,20 @@ export default function ReportsPage() {
   // Fetch daily collection data
   const fetchDailyData = async (date: string) => {
     try {
-      // Mock API call - in real app this would fetch from /api/daily-collections
-      const data = mockDailyData[date] || {
-        total_amount: 0,
-        total_transactions: 0,
-        cash_amount: 0,
-        card_amount: 0,
-        cheque_amount: 0,
-        online_amount: 0,
-        status: "open",
-        opened_by: "System",
-        closed_by: null,
-        opened_at: new Date().toISOString(),
-        closed_at: null,
+      const response = await fetch(`/api/reports?date=${encodeURIComponent(date)}`)
+      const result = await response.json()
+      if (result.success) {
+        setDailyData(result.data)
+      } else {
+        setDailyData({
+          total_amount: 0,
+          total_transactions: 0,
+          cash_amount: 0,
+          bank_amount: 0,
+          opened_at: null,
+          status: "no-activity",
+        })
       }
-      setDailyData(data)
     } catch (error) {
       console.error("Error fetching daily data:", error)
       showAlert("error", "Failed to fetch daily collection data")
@@ -108,15 +69,12 @@ export default function ReportsPage() {
   const closeDailyCollection = async () => {
     setIsProcessing(true)
     try {
-      // Mock API call - in real app this would call /api/daily-collections
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      setDailyData((prev) => ({
+      setDailyData((prev) => prev ? ({
         ...prev,
         status: "closed",
-        closed_by: "Current User",
-        closed_at: new Date().toISOString(),
-      }))
+      }) : prev)
 
       showAlert("success", "Daily collection closed successfully")
       setIsCloseDialogOpen(false)
@@ -130,8 +88,8 @@ export default function ReportsPage() {
 
   // Export daily report
   const exportDailyReport = () => {
-    const csvContent = `Date,Total Amount,Transactions,Cash,Card,Cheque,Online,Status
-${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions || 0},${dailyData?.cash_amount || 0},${dailyData?.card_amount || 0},${dailyData?.cheque_amount || 0},${dailyData?.online_amount || 0},${dailyData?.status || "open"}`
+    const csvContent = `Date,Total Amount (LKR),Transactions,Cash (LKR),Bank Transfer (LKR),Status
+${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions || 0},${dailyData?.cash_amount || 0},${dailyData?.bank_amount || 0},${dailyData?.status || "no-activity"}`
 
     const blob = new Blob([csvContent], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
@@ -150,6 +108,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
   }, [selectedDate])
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <Header />
@@ -199,7 +158,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-primary" />
                   <span className="text-2xl font-bold text-foreground">
-                    ${dailyData?.total_amount?.toFixed(2) || "0.00"}
+                    LKR {dailyData?.total_amount?.toFixed(2) || "0.00"}
                   </span>
                 </div>
               </CardContent>
@@ -223,10 +182,10 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   <span className="text-2xl font-bold text-foreground">
-                    $
+                    LKR
                     {dailyData?.total_transactions
-                      ? (dailyData.total_amount / dailyData.total_transactions).toFixed(2)
-                      : "0.00"}
+                      ? " " + (dailyData.total_amount / dailyData.total_transactions).toFixed(2)
+                      : " 0.00"}
                   </span>
                 </div>
               </CardContent>
@@ -239,14 +198,16 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                 <div className="flex items-center gap-2">
                   {dailyData?.status === "open" ? (
                     <Unlock className="w-5 h-5 text-green-600" />
+                  ) : dailyData?.status === "no-activity" ? (
+                    <Lock className="w-5 h-5 text-gray-400" />
                   ) : (
                     <Lock className="w-5 h-5 text-red-600" />
                   )}
                   <Badge
                     variant={dailyData?.status === "open" ? "default" : "secondary"}
-                    className={dailyData?.status === "open" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                    className={dailyData?.status === "open" ? "bg-green-100 text-green-800" : dailyData?.status === "no-activity" ? "bg-gray-100 text-gray-600" : "bg-red-100 text-red-800"}
                   >
-                    {dailyData?.status === "open" ? "Open" : "Closed"}
+                    {dailyData?.status === "open" ? "Active" : dailyData?.status === "no-activity" ? "No Activity" : "Closed"}
                   </Badge>
                 </div>
               </CardContent>
@@ -276,7 +237,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                       <span className="font-medium">Cash</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">${dailyData?.cash_amount?.toFixed(2) || "0.00"}</div>
+                      <div className="font-bold">LKR {dailyData?.cash_amount?.toFixed(2) || "0.00"}</div>
                       <div className="text-sm text-muted-foreground">
                         {dailyData?.total_amount
                           ? ((dailyData.cash_amount / dailyData.total_amount) * 100).toFixed(1)
@@ -288,43 +249,13 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                   <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium">Card</span>
+                      <span className="font-medium">Bank Transfer</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">${dailyData?.card_amount?.toFixed(2) || "0.00"}</div>
+                      <div className="font-bold">LKR {dailyData?.bank_amount?.toFixed(2) || "0.00"}</div>
                       <div className="text-sm text-muted-foreground">
                         {dailyData?.total_amount
-                          ? ((dailyData.card_amount / dailyData.total_amount) * 100).toFixed(1)
-                          : 0}
-                        %
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                      <span className="font-medium">Cheque</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">${dailyData?.cheque_amount?.toFixed(2) || "0.00"}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {dailyData?.total_amount
-                          ? ((dailyData.cheque_amount / dailyData.total_amount) * 100).toFixed(1)
-                          : 0}
-                        %
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-card/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                      <span className="font-medium">Online</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">${dailyData?.online_amount?.toFixed(2) || "0.00"}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {dailyData?.total_amount
-                          ? ((dailyData.online_amount / dailyData.total_amount) * 100).toFixed(1)
+                          ? ((dailyData.bank_amount / dailyData.total_amount) * 100).toFixed(1)
                           : 0}
                         %
                       </div>
@@ -339,67 +270,66 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-primary" />
-                  Donation Categories
+                  Payment Summary
                 </CardTitle>
-                <CardDescription>Top donation categories this month</CardDescription>
+                <CardDescription>Payment method breakdown for {selectedDate}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockCategoryData.map((category, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-sm">{category.name}</span>
-                        <span className="text-sm font-bold">${category.amount.toFixed(2)}</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${category.percentage}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{category.count} donations</span>
-                        <span>{category.percentage}%</span>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-sm">Cash Payments</span>
+                      <span className="text-sm font-bold">LKR {dailyData?.cash_amount?.toFixed(2) || "0.00"}</span>
                     </div>
-                  ))}
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${dailyData?.total_amount ? ((dailyData.cash_amount / dailyData.total_amount) * 100) : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-sm">Bank Transfers</span>
+                      <span className="text-sm font-bold">LKR {dailyData?.bank_amount?.toFixed(2) || "0.00"}</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${dailyData?.total_amount ? ((dailyData.bank_amount / dailyData.total_amount) * 100) : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Weekly Trend */}
+            {/* Daily Summary */}
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
-                  Weekly Collection Trend
+                  Daily Summary
                 </CardTitle>
-                <CardDescription>Daily collection amounts for the current week</CardDescription>
+                <CardDescription>Collection summary for {selectedDate}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-7 gap-2 h-40">
-                    {mockWeeklyTrend.map((day, index) => {
-                      const maxAmount = Math.max(...mockWeeklyTrend.map((d) => d.amount))
-                      const height = (day.amount / maxAmount) * 100
-                      return (
-                        <div key={index} className="flex flex-col items-center justify-end">
-                          <div
-                            className="w-full bg-primary rounded-t-md transition-all duration-300 hover:bg-primary/80 min-h-[20px]"
-                            style={{ height: `${height}%` }}
-                            title={`${day.date}: $${day.amount}`}
-                          ></div>
-                          <span className="text-xs text-muted-foreground mt-2">{day.date}</span>
-                        </div>
-                      )
-                    })}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Cash</div>
+                    <div className="text-xl font-bold text-green-700">LKR {dailyData?.cash_amount?.toFixed(2) || "0.00"}</div>
                   </div>
-                  <div className="grid grid-cols-7 gap-2 text-center">
-                    {mockWeeklyTrend.map((day, index) => (
-                      <div key={index} className="text-xs font-medium">
-                        ${(day.amount / 1000).toFixed(1)}k
-                      </div>
-                    ))}
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Bank Transfer</div>
+                    <div className="text-xl font-bold text-blue-700">LKR {dailyData?.bank_amount?.toFixed(2) || "0.00"}</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Transactions</div>
+                    <div className="text-xl font-bold text-purple-700">{dailyData?.total_transactions || 0}</div>
+                  </div>
+                  <div className="text-center p-4 bg-amber-50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Total</div>
+                    <div className="text-xl font-bold text-amber-700">LKR {dailyData?.total_amount?.toFixed(2) || "0.00"}</div>
                   </div>
                 </div>
               </CardContent>
@@ -418,29 +348,15 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Opened By</Label>
-                      <div className="text-sm text-muted-foreground">{dailyData?.opened_by || "N/A"}</div>
+                      <Label className="text-sm font-medium">Selected Date</Label>
+                      <div className="text-sm text-muted-foreground">{selectedDate}</div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Opened At</Label>
+                      <Label className="text-sm font-medium">First Transaction</Label>
                       <div className="text-sm text-muted-foreground">
-                        {dailyData?.opened_at ? new Date(dailyData.opened_at).toLocaleString() : "N/A"}
+                        {dailyData?.opened_at ? new Date(dailyData.opened_at).toLocaleString() : "No transactions"}
                       </div>
                     </div>
-                    {dailyData?.status === "closed" && (
-                      <>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">Closed By</Label>
-                          <div className="text-sm text-muted-foreground">{dailyData?.closed_by || "N/A"}</div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">Closed At</Label>
-                          <div className="text-sm text-muted-foreground">
-                            {dailyData?.closed_at ? new Date(dailyData.closed_at).toLocaleString() : "N/A"}
-                          </div>
-                        </div>
-                      </>
-                    )}
                   </div>
 
                   {dailyData?.status === "open" && (
@@ -466,7 +382,7 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
                                 <div>
                                   <span className="font-medium">Total Amount:</span>
                                   <div className="text-lg font-bold text-primary">
-                                    ${dailyData?.total_amount?.toFixed(2) || "0.00"}
+                                    LKR {dailyData?.total_amount?.toFixed(2) || "0.00"}
                                   </div>
                                 </div>
                                 <div>
@@ -515,5 +431,6 @@ ${selectedDate},${dailyData?.total_amount || 0},${dailyData?.total_transactions 
       </section>
       <Footer />
     </div>
+    </AuthGuard>
   )
 }

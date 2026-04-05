@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Download,
   Eye,
+  Pencil,
 } from "lucide-react"
 import { useLoading } from "@/components/loading-provider"
 import { LoadingSpinner } from "@/components/ui/spinner"
@@ -36,10 +37,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { AuthGuard } from "@/components/auth-guard"
+import { useAuth } from "@/components/auth-provider"
 import { group } from "console"
 
 export default function SandaCollectionPage() {
   const { setLoading } = useLoading()
+  const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFamily, setSelectedFamily] = useState<FamilyType | null>(null)
   const [isDataLoading, setIsDataLoading] = useState(true)
@@ -48,8 +52,8 @@ export default function SandaCollectionPage() {
     family_name: string
     id_card_no: string
     phone: string
-    sanda_amount: string
-    arrears?: string
+    sanda_amount: number
+    arrears?: number
   }
   const [families, setFamilies] = useState<FamilyType[]>([])
   type DonationCategoryType = {
@@ -60,15 +64,15 @@ export default function SandaCollectionPage() {
   const [donationCategories, setDonationCategories] = useState<DonationCategoryType[]>([])
   const [slideIndex, setSlideIndex] = useState(0)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedFamilyCode, setSelectedFamilyCode] = useState<string | null>(null)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
   const [lastReceiptNumber, setLastReceiptNumber] = useState("")
   const [dailyStats, setDailyStats] = useState({
-    total_families: 2500,
-    todays_collections: 1250,
-    receipts_issued: 45,
-    status: "open",
+    total_families: 0,
+    todays_collections: 0,
+    receipts_issued: 0,
   })
   const [paymentForm, setPaymentForm] = useState({
     amount: "",
@@ -82,11 +86,33 @@ export default function SandaCollectionPage() {
     family_name: string
     id_card_no: string
     phone: string
-    sanda_amount: string
+    sanda_amount: number
     arrears?: number
   }
   const [familyDetails, setFamilyDetails] = useState<FamilyDetailsType | null>(null)
   const [familyError, setFamilyError] = useState("")
+  const [isEditingFamily, setIsEditingFamily] = useState(false)
+  const [editForm, setEditForm] = useState({
+    family_name: "",
+    phone: "",
+    id_card_no: "",
+    sanda_amount: "",
+    arrears: "",
+  })
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+
+  // Fetch daily stats from API
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/sanda-stats")
+      const result = await response.json()
+      if (result.success) {
+        setDailyStats(result.data)
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error)
+    }
+  }
 
   // Fetch families from API
   const fetchFamilies = async (search = "") => {
@@ -98,7 +124,7 @@ export default function SandaCollectionPage() {
 
       if (result.success) {
         setFamilies(result.data)
-      }else {
+      } else {
         setFamilies([])
       }
     } catch (error) {
@@ -174,18 +200,22 @@ export default function SandaCollectionPage() {
     }
   }
 
-  // Handle payment submission
-  const handlePaymentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Show confirmation dialog before submitting
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsProcessing(true)
-    setLoading(true, "Processing payment...")
-
     if (!familyDetails) {
       showAlert("error", "Please enter a valid Family ID.")
-      setIsProcessing(false)
-      setLoading(false)
       return
     }
+    setIsConfirmDialogOpen(true)
+  }
+
+  // Handle payment submission after confirmation
+  const handlePaymentSubmit = async () => {
+    if (!familyDetails) return
+    setIsConfirmDialogOpen(false)
+    setIsProcessing(true)
+    setLoading(true, "Processing payment...")
 
     try {
       const response = await fetch("/api/donations", {
@@ -198,7 +228,7 @@ export default function SandaCollectionPage() {
           amount: Number.parseFloat(paymentForm.amount),
           payment_method: paymentForm.payment_method,
           notes: paymentForm.notes,
-          collected_by: "Admin", // In real app, get from auth
+          collected_by: user?.full_name || "Unknown",
         }),
       })
 
@@ -207,18 +237,31 @@ export default function SandaCollectionPage() {
       if (result.success) {
         const receiptNumber = result.data.receipt_number;
         setLastReceiptNumber(receiptNumber)
-        showAlert("success", `Donation processed successfully! Receipt: ${receiptNumber}`)
+        showAlert("success", `Payment processed successfully! Receipt: ${receiptNumber}`)
         setIsPaymentDialogOpen(false)
         setPaymentForm({ amount: "", category: "", payment_method: "", notes: "" })
 
-        // Update daily stats
-        setDailyStats((prev) => ({
-          ...prev,
-          todays_collections: prev.todays_collections + Number.parseFloat(paymentForm.amount),
-          receipts_issued: prev.receipts_issued + 1,
-        }))
+        // Auto-print receipt
+        if (result.data.receipt_html) {
+          const printWindow = window.open("", "_blank")
+          if (printWindow) {
+            printWindow.document.write(result.data.receipt_html)
+            printWindow.document.close()
+            printWindow.onload = () => {
+              printWindow.print()
+            }
+          }
+        }
 
-        // Refresh families to update donation totals
+        // Refresh stats from DB
+        await fetchStats()
+
+        // Refresh family details to update arrears in the form
+        if (familyIdInput) {
+          await fetchFamilyDetails(familyIdInput)
+        }
+
+        // Refresh families to update card slider
         fetchFamilies(searchTerm)
       } else {
         showAlert("error", result.error || "Failed to process donation")
@@ -272,21 +315,26 @@ export default function SandaCollectionPage() {
       try {
         await Promise.all([
           fetchFamilies(),
-          fetchDonationCategories()
+          fetchDonationCategories(),
+          fetchStats()
         ])
       } finally {
         setLoading(false)
       }
     }
-    
+
     loadInitialData()
   }, [])
 
+  // Check if family has outstanding arrears
+  const hasArrears = familyDetails && Number(familyDetails.arrears || 0) > 0
+
   // Button label logic
   const getButtonLabel = () => {
-    if (paymentForm.payment_method === "cash") return "Collect Cash"
-    if (paymentForm.payment_method === "bank") return "Verify Receipt"
-    return "Collect"
+    if (!hasArrears) return "No Arrears Due"
+    if (paymentForm.payment_method === "cash") return "Collect Cash Payment"
+    if (paymentForm.payment_method === "bank") return "Record Bank Payment"
+    return "Record Payment"
   }
 
   const handleSelectFamily = (family: FamilyType) => {
@@ -296,6 +344,7 @@ export default function SandaCollectionPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <Header />
@@ -389,14 +438,14 @@ export default function SandaCollectionPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">Active Status</CardTitle>
+                <CardTitle className="text-sm text-muted-foreground">Today's Date</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    {dailyStats.status === "open" ? "Open" : "Closed"}
-                  </Badge>
+                  <span className="text-lg font-bold text-foreground">
+                    {new Date().toLocaleDateString("en-LK", { year: "numeric", month: "short", day: "numeric" })}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -474,116 +523,79 @@ export default function SandaCollectionPage() {
                         {families.map((family) => {
                           const isSelected = selectedFamilyCode === family.family_code
                           return (
-                        <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
-                                <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
-                                  <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                      <div>
-                                        <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
-                                        <CardDescription className="text-sm">
-                                          FAMILY CODE: {family.family_code}
-                                        </CardDescription>
-                                        <CardDescription className="text-sm">
-                                          Head: {family.family_name}
-                                        </CardDescription>
-                                      </div>
-                                      <div className="ml-4">
-                                        <Button
-                                          size="sm"
-                                          variant={isSelected ? "secondary" : "outline"}
-                                          onClick={() => handleSelectFamily(family)}
-                                          aria-label={`Select ${family.family_name}`}
-                                          className="h-8 inline-flex items-center justify-center gap-2"
-                                          disabled={isProcessing}
-                                        >
-                                          {isSelected ? (
-                                            <>
-                                              <CheckCircle className="w-4 h-4 text-green-600" />
-                                              <span>Selected</span>
-                                            </>
-                                          ) : (
-                                            <span>Select</span>
-                                          )}
-                                        </Button>
-                                      </div>
+                            <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
+                              <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <CardTitle className="text-lg text-card-foreground">{family.family_name}</CardTitle>
+                                      <CardDescription className="text-sm">
+                                        FAMILY CODE: {family.family_code}
+                                      </CardDescription>
+                                      <CardDescription className="text-sm">
+                                        Head: {family.family_name}
+                                      </CardDescription>
                                     </div>
-                                  </CardHeader>
-                                  <CardContent className="flex-1 flex flex-col justify-between">
-                                    <div className="space-y-3">
-                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Phone className="w-4 h-4" />
-                                        {family.phone}
-                                      </div>
-                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Users className="w-4 h-4" />
-                                        {family.id_card_no}
-                                      </div>
+                                    <div className="ml-4">
+                                      <Button
+                                        size="sm"
+                                        variant={isSelected ? "secondary" : "outline"}
+                                        onClick={() => handleSelectFamily(family)}
+                                        aria-label={`Select ${family.family_name}`}
+                                        className="h-8 inline-flex items-center justify-center gap-2"
+                                        disabled={isProcessing}
+                                      >
+                                        {isSelected ? (
+                                          <>
+                                            <CheckCircle className="w-4 h-4 text-green-600" />
+                                            <span>Selected</span>
+                                          </>
+                                        ) : (
+                                          <span>Select</span>
+                                        )}
+                                      </Button>
                                     </div>
-                                    <div className="pt-2 border-t border-border mt-4">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
-                                        <span className="font-semibold text-primary">
-                                          ${parseInt(family.sanda_amount)?.toFixed(2) || "0.00"}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between items-center mb-4">
-                                        <span className="text-sm text-muted-foreground">Arrears:</span>
-                                        <span className="text-sm">{family.arrears || "0.00"}</span>
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                                          <DialogTrigger asChild>
-                                            <Button
-                                              className="flex-1"
-                                              onClick={() => setSelectedFamily(family)}
-                                              disabled={isProcessing}
-                                            >
-                                              <Plus className="w-4 h-4 mr-2" />
-                                              New Donation
-                                            </Button>
-                                          </DialogTrigger>
-                                          <DialogContent className="sm:max-w-md">
-                                            <DialogHeader>
-                                              <DialogTitle>Process Donation</DialogTitle>
-                                              <DialogDescription>
-                                                Recording donation for {selectedFamily?.family_name}
-                                              </DialogDescription>
-                                            </DialogHeader>
-                                            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                                              {/* ...existing form fields... */}
-                                              <div className="flex gap-2">
-                                                <Button
-                                                  type="button"
-                                                  variant="outline"
-                                                  onClick={() => setIsPaymentDialogOpen(false)}
-                                                  className="flex-1"
-                                                  disabled={isProcessing}
-                                                >
-                                                  Cancel
-                                                </Button>
-                                                <Button type="submit" className="flex-1" disabled={isProcessing}>
-                                                  {isProcessing ? "Processing..." : "Process & Generate Receipt"}
-                                                </Button>
-                                              </div>
-                                            </form>
-                                          </DialogContent>
-                                        </Dialog>
-                                        <Button variant="outline" size="sm">
-                                          View History
-                                        </Button>
-                                      </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="flex-1 flex flex-col justify-between">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Phone className="w-4 h-4" />
+                                      {family.phone}
                                     </div>
-                                  </CardContent>
-                                </Card>
-                          </div>
-                        )})}
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Users className="w-4 h-4" />
+                                      {family.id_card_no}
+                                    </div>
+                                  </div>
+                                  <div className="pt-2 border-t border-border mt-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="text-sm text-muted-foreground">SANDA AMOUNT:</span>
+                                      <span className="font-semibold text-primary">
+                                        LKR {Number(family.sanda_amount || 0).toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-4">
+                                      <span className="text-sm text-muted-foreground">
+                                        {Number(family.arrears || 0) < 0 ? "Credit Balance:" : Number(family.arrears || 0) === 0 ? "Status:" : "Arrears:"}
+                                      </span>
+                                      <span className={`text-sm font-medium ${Number(family.arrears || 0) < 0 ? "text-blue-600" : Number(family.arrears || 0) === 0 ? "text-green-600" : "text-red-600"}`}>
+                                        {Number(family.arrears || 0) === 0 ? "Fully Paid" : `LKR ${Math.abs(Number(family.arrears || 0)).toFixed(2)}`}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
-                 )
+                )
               })()
             )}
-          </div>          
+          </div>
 
         </div>
       </section>
@@ -592,7 +604,7 @@ export default function SandaCollectionPage() {
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-2xl bg-card rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-4 text-primary">SANDA Collection Form</h2>
-          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Family Code</label>
               <input
@@ -611,35 +623,166 @@ export default function SandaCollectionPage() {
             {/* Show family details only if Family ID is entered and details exist */}
             {familyIdInput && familyDetails && (
               <div className="bg-gradient-to-br from-green-50 via-white to-green-100 rounded-xl p-4 mb-4 shadow border border-green-200">
-                <div className="flex flex-col md:flex-row md:items-center md:gap-8 mb-2">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <div className="text-lg font-semibold text-green-900 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-green-600" />
-                      {familyDetails.family_name}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      <span className="font-medium text-green-700">Head of Family:</span> {familyDetails.family_name}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      <Phone className="inline w-4 h-4 mr-1 text-green-600" />
-                      {familyDetails.phone}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      <Users className="inline w-4 h-4 mr-1 text-green-600" />
-                      {familyDetails.id_card_no}
-                    </div>
+                    {!isEditingFamily ? (
+                      <>
+                        <div className="text-lg font-semibold text-green-900 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-green-600" />
+                          {familyDetails.family_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <span className="font-medium text-green-700">Head of Family:</span> {familyDetails.family_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <Phone className="inline w-4 h-4 mr-1 text-green-600" />
+                          {familyDetails.phone}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <Users className="inline w-4 h-4 mr-1 text-green-600" />
+                          {familyDetails.id_card_no}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-green-700 mb-1">Family Name</label>
+                          <input
+                            type="text"
+                            value={editForm.family_name}
+                            onChange={e => setEditForm({ ...editForm, family_name: e.target.value })}
+                            className="w-full border border-green-300 rounded px-3 py-1.5 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-green-700 mb-1">Phone</label>
+                          <input
+                            type="text"
+                            value={editForm.phone}
+                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                            className="w-full border border-green-300 rounded px-3 py-1.5 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-green-700 mb-1">ID Card No</label>
+                          <input
+                            type="text"
+                            value={editForm.id_card_no}
+                            onChange={e => setEditForm({ ...editForm, id_card_no: e.target.value })}
+                            className="w-full border border-green-300 rounded px-3 py-1.5 text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-2">
+                    {!isEditingFamily ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-green-300 text-green-700 hover:bg-green-100"
+                        onClick={() => {
+                          setEditForm({
+                            family_name: familyDetails.family_name,
+                            phone: familyDetails.phone,
+                            id_card_no: familyDetails.id_card_no,
+                            sanda_amount: String(familyDetails.sanda_amount || 0),
+                            arrears: String(familyDetails.arrears || 0),
+                          })
+                          setIsEditingFamily(true)
+                        }}
+                      >
+                        <Pencil className="w-3.5 h-3.5 mr-1" />
+                        Edit
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsEditingFamily(false)}
+                          disabled={isSavingEdit}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isSavingEdit}
+                          onClick={async () => {
+                            setIsSavingEdit(true)
+                            try {
+                              const res = await fetch(`/api/families/${familyDetails.family_code}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(editForm),
+                              })
+                              const result = await res.json()
+                              if (result.success) {
+                                setFamilyDetails(result.data)
+                                setIsEditingFamily(false)
+                                showAlert("success", "Family details updated successfully")
+                                fetchFamilies(searchTerm)
+                              } else {
+                                showAlert("error", result.error || "Failed to update")
+                              }
+                            } catch {
+                              showAlert("error", "Failed to update family details")
+                            } finally {
+                              setIsSavingEdit(false)
+                            }
+                          }}
+                        >
+                          {isSavingEdit ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row md:gap-8 mt-2">
                   <div className="flex-1">
-                    <div className="text-base font-semibold text-green-900">
-                      <span className="text-green-700">Total Arrears:</span> <span className="ml-2">LKR {familyDetails.arrears}</span>
-                    </div>
+                    {!isEditingFamily ? (
+                      <div className="text-base font-semibold text-green-900">
+                        <span className={Number(familyDetails.arrears || 0) < 0 ? "text-blue-700" : Number(familyDetails.arrears || 0) === 0 ? "text-green-700" : "text-red-700"}>
+                          {Number(familyDetails.arrears || 0) < 0 ? "Credit Balance:" : Number(familyDetails.arrears || 0) === 0 ? "Status:" : "Total Arrears:"}
+                        </span>
+                        <span className={`ml-2 ${Number(familyDetails.arrears || 0) < 0 ? "text-blue-800" : Number(familyDetails.arrears || 0) === 0 ? "text-green-800" : "text-red-800"}`}>
+                          {Number(familyDetails.arrears || 0) === 0 ? "Fully Paid" : `LKR ${Math.abs(Number(familyDetails.arrears || 0)).toFixed(2)}`}
+                        </span>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-medium text-green-700 mb-1">Arrears (LKR)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm.arrears}
+                          onChange={e => setEditForm({ ...editForm, arrears: e.target.value })}
+                          className="w-full border border-green-300 rounded px-3 py-1.5 text-sm"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-semibold text-green-900">
-                      <span className="text-green-700">SANDA AMOUNT:</span> <span className="ml-2">LKR {familyDetails.sanda_amount}</span>
-                    </div>
+                    {!isEditingFamily ? (
+                      <div className="text-base font-semibold text-green-900">
+                        <span className="text-green-700">SANDA AMOUNT:</span>
+                        <span className="ml-2">LKR {Number(familyDetails.sanda_amount || 0).toFixed(2)}</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-medium text-green-700 mb-1">SANDA Amount (LKR)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm.sanda_amount}
+                          onChange={e => setEditForm({ ...editForm, sanda_amount: e.target.value })}
+                          className="w-full border border-green-300 rounded px-3 py-1.5 text-sm"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -651,8 +794,9 @@ export default function SandaCollectionPage() {
                 name="amount"
                 value={paymentForm.amount}
                 onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required
+                disabled={!hasArrears}
               />
             </div>
             <div>
@@ -661,8 +805,9 @@ export default function SandaCollectionPage() {
                 name="payment_method"
                 value={paymentForm.payment_method}
                 onChange={e => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required
+                disabled={!hasArrears}
               >
                 <option value="">Select</option>
                 <option value="cash">Cash</option>
@@ -675,14 +820,15 @@ export default function SandaCollectionPage() {
                 name="notes"
                 value={paymentForm.notes}
                 onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 rows={3}
+                disabled={!hasArrears}
               />
             </div>
             <button
               type="submit"
               className="bg-primary text-white px-6 py-2 rounded font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isProcessing || !familyDetails || !!familyError}
+              disabled={isProcessing || !familyDetails || !!familyError || !hasArrears}
             >
               {isProcessing ? "Processing..." : getButtonLabel()}
             </button>
@@ -690,7 +836,60 @@ export default function SandaCollectionPage() {
         </div>
       </section>
 
+      {/* Confirmation Dialog */}
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Please review the payment details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Family:</span>
+              <span className="font-medium">{familyDetails?.family_name} ({familyDetails?.family_code})</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Amount:</span>
+              <span className="font-semibold text-primary">LKR {Number(paymentForm.amount || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Payment Method:</span>
+              <span className="font-medium capitalize">{paymentForm.payment_method}</span>
+            </div>
+            {paymentForm.notes && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Notes:</span>
+                <span className="font-medium">{paymentForm.notes}</span>
+              </div>
+            )}
+            <div className="border-t pt-3 mt-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Current Arrears:</span>
+                <span className="font-medium">LKR {Number(familyDetails?.arrears || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">After Payment:</span>
+                <span className="font-semibold">
+                  LKR {(Number(familyDetails?.arrears || 0) - Number(paymentForm.amount || 0)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePaymentSubmit} disabled={isProcessing}>
+              {isProcessing ? "Processing..." : "Confirm Payment"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
+    </AuthGuard>
   )
 }

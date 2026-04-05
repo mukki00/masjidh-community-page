@@ -1,3 +1,4 @@
+import { neon } from "@neondatabase/serverless"
 import { type NextRequest, NextResponse } from "next/server"
 
 // Mock data - in real app this would come from database

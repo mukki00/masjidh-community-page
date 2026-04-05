@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/components/auth-provider";
 
 export default function Header() {
   const pathname = usePathname();
+  const { isAuthenticated, user, logout, isLoading: authLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [donationOpen, setDonationOpen] = useState(false);
 
@@ -79,7 +81,8 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
-              {/* Donations Dropdown */}
+              {/* Donations Dropdown - only visible when authenticated */}
+              {isAuthenticated && (
               <div className="relative">
                 <div
                   className={`w-40 h-10 text-center px-2 py-2 rounded font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer
@@ -126,6 +129,30 @@ export default function Header() {
                   </div>
                 )}
               </div>
+              )}
+              {/* Login / Logout button */}
+              {!authLoading && (
+                isAuthenticated ? (
+                  <button
+                    onClick={() => logout()}
+                    className="group flex flex-col items-center justify-center w-40 h-10 px-2 py-1 rounded font-medium transition-colors text-foreground hover:bg-red-600"
+                  >
+                    <span className="group-hover:text-white">Logout</span>
+                    <span className="text-xs text-muted-foreground group-hover:text-white/80">({user?.username})</span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={`w-40 h-10 text-center px-2 py-2 rounded font-medium transition-colors
+                      ${pathname === "/login"
+                        ? "bg-primary text-white shadow"
+                        : "text-foreground hover:bg-primary hover:text-white"}
+                    `}
+                  >
+                    Login
+                  </Link>
+                )
+              )}
             </div>
           )}
 
@@ -170,7 +197,8 @@ export default function Header() {
                 </Link>
               ))}
 
-              {/* Donations collapsible in hamburger view */}
+              {/* Donations collapsible in hamburger view - only when authenticated */}
+              {isAuthenticated && (
               <div className="mt-2 w-full">
                 <button
                   type="button"
@@ -205,6 +233,29 @@ export default function Header() {
                   </div>
                 )}
               </div>
+              )}
+              {/* Login / Logout in mobile menu */}
+              {!authLoading && (
+                isAuthenticated ? (
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false); }}
+                    className="group flex flex-col items-start px-3 py-2 rounded font-medium transition-colors text-foreground hover:bg-red-600 text-left mt-2"
+                  >
+                    <span className="group-hover:text-white">Logout</span>
+                    <span className="text-xs text-muted-foreground group-hover:text-white/80">({user?.username})</span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={`px-3 py-2 rounded font-medium transition-colors mt-2
+                      ${pathname === "/login" ? "bg-primary text-white shadow" : "text-foreground hover:bg-primary hover:text-white"}
+                    `}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Login
+                  </Link>
+                )
+              )}
             </div>
           </div>
         )}
