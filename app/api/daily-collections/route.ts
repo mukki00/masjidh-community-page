@@ -1,10 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 
+function slNow() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" }))
+}
+
 // Mock daily collections data
 const dailyCollections = [
   {
     id: 1,
-    collection_date: new Date().toISOString().split("T")[0],
+    collection_date: slNow().toISOString().split("T")[0],
     total_amount: 1250.0,
     total_transactions: 45,
     cash_amount: 650.0,
@@ -13,18 +17,18 @@ const dailyCollections = [
     online_amount: 50.0,
     opened_by: "Admin User",
     closed_by: null,
-    opened_at: new Date().toISOString(),
+    opened_at: slNow().toISOString(),
     closed_at: null,
     status: "open",
     notes: null,
-    created_at: new Date().toISOString(),
+    created_at: slNow().toISOString(),
   },
 ]
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get("date") || new Date().toISOString().split("T")[0]
+    const date = searchParams.get("date") || slNow().toISOString().split("T")[0]
 
     const collection = dailyCollections.find((c) => c.collection_date === date)
 
@@ -41,11 +45,11 @@ export async function GET(request: NextRequest) {
         online_amount: 0,
         opened_by: "System",
         closed_by: null,
-        opened_at: new Date().toISOString(),
+        opened_at: slNow().toISOString(),
         closed_at: null,
         status: "open",
         notes: null,
-        created_at: new Date().toISOString(),
+        created_at: slNow().toISOString(),
       }
       dailyCollections.push(newCollection)
 
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
       if (collection) {
         collection.status = "closed"
         collection.closed_by = closed_by || "System"
-        collection.closed_at = new Date().toISOString()
+        collection.closed_at = slNow().toISOString()
 
         return NextResponse.json({
           success: true,

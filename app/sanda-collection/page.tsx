@@ -103,6 +103,19 @@ export default function SandaCollectionPage() {
     arrears: "",
   })
   const [isSavingEdit, setIsSavingEdit] = useState(false)
+  type TodayReceipt = {
+    id: number
+    family_code: string
+    family_name: string
+    amount: number
+    payment_method: string
+    receipt_number: string
+    receipt_html: string
+    transaction_date: string
+    collected_by: string
+  }
+  const [todayReceipts, setTodayReceipts] = useState<TodayReceipt[]>([])
+  const [isReceiptsLoading, setIsReceiptsLoading] = useState(false)
 
   // Fetch daily stats from API
   const fetchStats = async () => {
@@ -156,6 +169,35 @@ export default function SandaCollectionPage() {
   const showAlert = (type: string, message: string) => {
     setAlert({ show: true, type, message })
     setTimeout(() => setAlert({ show: false, type: "", message: "" }), 5000)
+  }
+
+  // Fetch today's receipts
+  const fetchTodayReceipts = async () => {
+    setIsReceiptsLoading(true)
+    try {
+      const today = new Date().toISOString().split("T")[0]
+      const response = await fetch(`/api/donations?date=${today}`)
+      const result = await response.json()
+      if (result.success) {
+        setTodayReceipts(result.data)
+      }
+    } catch (error) {
+      console.error("Error fetching today's receipts:", error)
+    } finally {
+      setIsReceiptsLoading(false)
+    }
+  }
+
+  // Re-print receipt
+  const reprintReceipt = (receiptHtml: string) => {
+    const printWindow = window.open("", "_blank")
+    if (printWindow) {
+      printWindow.document.write(receiptHtml)
+      printWindow.document.close()
+      printWindow.onload = () => {
+        printWindow.print()
+      }
+    }
   }
 
   // Download receipt as PDF
@@ -259,6 +301,9 @@ export default function SandaCollectionPage() {
         // Refresh stats from DB
         await fetchStats()
 
+        // Refresh today's receipts
+        await fetchTodayReceipts()
+
         // Refresh family details to update arrears in the form
         if (familyIdInput) {
           await fetchFamilyDetails(familyIdInput)
@@ -319,7 +364,8 @@ export default function SandaCollectionPage() {
         await Promise.all([
           fetchFamilies(),
           fetchDonationCategories(),
-          fetchStats()
+          fetchStats(),
+          fetchTodayReceipts()
         ])
       } finally {
         setLoading(false)
@@ -834,6 +880,83 @@ export default function SandaCollectionPage() {
               {isProcessing ? "Processing..." : getButtonLabel()}
             </button>
           </form>
+        </div>
+      </section>
+
+      {/* Today's Receipts Section */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-foreground">Today's Receipts</h3>
+            <Button variant="outline" size="sm" onClick={fetchTodayReceipts} disabled={isReceiptsLoading}>
+              {isReceiptsLoading ? "Refreshing..." : "Refresh"}
+            </Button>
+          </div>
+          {isReceiptsLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner text="Loading receipts..." />
+            </div>
+          ) : todayReceipts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No receipts issued today.
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {todayReceipts.map((receipt) => (
+                <Card key={receipt.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
+                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Receipt</span>
+                        <span className="font-medium">{receipt.receipt_number}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Family</span>
+                        <span className="font-medium">{receipt.family_name} ({receipt.family_code})</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Amount</span>
+                        <span className="font-semibold text-primary">LKR {Number(receipt.amount).toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Time</span>
+                        <span className="font-medium">{new Date(receipt.transaction_date).toLocaleTimeString("en-LK", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Colombo" })}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Method</span>
+                        <Badge variant="outline" className="capitalize">{receipt.payment_method}</Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!receipt.receipt_html}
+                        onClick={() => {
+                          const newWindow = window.open("", "_blank")
+                          if (newWindow && receipt.receipt_html) {
+                            newWindow.document.write(receipt.receipt_html)
+                            newWindow.document.close()
+                          }
+                        }}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!receipt.receipt_html}
+                        onClick={() => reprintReceipt(receipt.receipt_html)}
+                      >
+                        <Receipt className="w-3 h-3 mr-1" />
+                        Re-Print
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

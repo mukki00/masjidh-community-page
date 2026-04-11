@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const today = new Date().toISOString().split("T")[0]
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })).toISOString().split("T")[0]
 
     const [familiesRes, todayPaymentsRes, todayReceiptsRes] = await Promise.all([
       pool.query("SELECT COUNT(*) as total FROM families"),

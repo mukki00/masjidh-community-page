@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       message: `Monthly arrears updated for ${result.rowCount} families`,
       data: {
         updated_count: result.rowCount,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })).toISOString(),
       },
     })
   } catch (error) {
