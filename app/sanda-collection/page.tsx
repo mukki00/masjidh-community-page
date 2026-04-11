@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Search,
   Users,
@@ -16,6 +16,8 @@ import {
   Download,
   Eye,
   Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { useLoading } from "@/components/loading-provider"
 import { LoadingSpinner } from "@/components/ui/spinner"
@@ -63,6 +65,7 @@ export default function SandaCollectionPage() {
   }
   const [donationCategories, setDonationCategories] = useState<DonationCategoryType[]>([])
   const [slideIndex, setSlideIndex] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -485,15 +488,12 @@ export default function SandaCollectionPage() {
               </div>
             ) : (
               (() => {
-                // chunk families into slides of 2
-                // const slides: FamilyType[][] = []
-                // for (let i = 0; i < families.length; i += 2) slides.push(families.slice(i, i + 3))
-                const CARD_WIDTH = 320 // matches w-80
-                const GAP = 36 // gap-6 ~= 24px
-                const visibleCount = 3
-                const maxIndex = Math.max(0, families.length - visibleCount)
-                const prev = () => setSlideIndex((s) => Math.max(0, s - 1))
-                const next = () => setSlideIndex((s) => Math.min(maxIndex, s + 1))
+                const scrollBy = (direction: number) => {
+                  const container = scrollContainerRef.current
+                  if (!container) return
+                  const cardWidth = container.querySelector('.snap-center')?.clientWidth || 300
+                  container.scrollBy({ left: direction * (cardWidth + 16), behavior: 'smooth' })
+                }
 
                 return (
                   <div className="relative">
@@ -501,30 +501,31 @@ export default function SandaCollectionPage() {
                       <div className="text-sm text-muted-foreground">Showing families</div>
                     </div>
 
-                    {/* big slider viewport */}
-                    <div className="relative overflow-hidden h-96 sm:h-80 md:h-96 lg:h-[28rem]">
-                      {/* left control (overlayed) */}
-                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 z-20">
-                        <Button variant="ghost" size="icon" className="h-50 w-10" onClick={prev} disabled={slideIndex === 0} aria-label="Previous slide">
-                          ‹
+                    {/* scrollable card carousel */}
+                    <div className="relative">
+                      {/* left control */}
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden sm:block">
+                        <Button variant="outline" size="icon" className="h-10 w-10 rounded-full shadow-md bg-background" onClick={() => scrollBy(-1)} aria-label="Previous card">
+                          <ChevronLeft className="h-5 w-5" />
                         </Button>
                       </div>
-                      {/* right control (overlayed) */}
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 z-20">
-                        <Button variant="ghost" size="icon" className="h-50 w-10" onClick={next} disabled={slideIndex >= maxIndex} aria-label="Next slide">
-                          ›
+                      {/* right control */}
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20 hidden sm:block">
+                        <Button variant="outline" size="icon" className="h-10 w-10 rounded-full shadow-md bg-background" onClick={() => scrollBy(1)} aria-label="Next card">
+                          <ChevronRight className="h-5 w-5" />
                         </Button>
                       </div>
 
                       <div
-                        className="flex transition-transform duration-300 h-full"
-                        style={{ transform: `translateX(-${slideIndex * (CARD_WIDTH + GAP)}px)` }}
+                        ref={scrollContainerRef}
+                        className="flex items-stretch gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 px-1 sm:px-12 -mx-1 sm:mx-0"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                       >
                         {families.map((family) => {
                           const isSelected = selectedFamilyCode === family.family_code
                           return (
-                            <div key={family.family_code} className="w-full p-4 h-full flex items-stretch">
-                              <Card className="hover:shadow-lg transition-shadow h-full w-80 flex flex-col">
+                            <div key={family.family_code} className="snap-center shrink-0 w-[85vw] sm:w-80 p-2 flex">
+                              <Card className="hover:shadow-lg transition-shadow w-full flex flex-col">
                                 <CardHeader>
                                   <div className="flex items-start justify-between">
                                     <div>
