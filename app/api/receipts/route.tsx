@@ -55,11 +55,11 @@ function generatePDFContent(donation: any, family: any, category: any) {
             margin: 0;
             padding: 8px;
             color: #333;
-            line-height: 1.4;
-            font-size: 16px;
+            line-height: 1.5;
+            font-size: 20px;
         }
         .receipt-container {
-            max-width: 400px;
+            max-width: 500px;
             margin: 0 auto;
             border: 1px solid #059669;
             border-radius: 6px;
@@ -73,12 +73,12 @@ function generatePDFContent(donation: any, family: any, category: any) {
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
         }
         .header p {
             margin: 2px 0 0 0;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
             opacity: 1;
         }
@@ -94,7 +94,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
         .receipt-info h2 {
             margin: 0 0 6px 0;
             color: #059669;
-            font-size: 18px;
+            font-size: 22px;
         }
         .info-grid {
             display: grid;
@@ -108,14 +108,14 @@ function generatePDFContent(donation: any, family: any, category: any) {
         .info-label {
             font-weight: bold;
             color: #374151;
-            font-size: 16px;
+            font-size: 20px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 1px;
         }
         .info-value {
             color: #111827;
-            font-size: 16px;
+            font-size: 20px;
         }
         .amount-section {
             background: #ecfdf5;
@@ -126,7 +126,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             margin: 8px 0;
         }
         .amount-label {
-            font-size: 16px;
+            font-size: 20px;
             color: #047857;
             font-weight: bold;
             text-transform: uppercase;
@@ -134,7 +134,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             margin-bottom: 2px;
         }
         .amount-value {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             color: #059669;
             margin: 0;
@@ -147,7 +147,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
         .family-section h3 {
             margin: 0 0 6px 0;
             color: #374151;
-            font-size: 16px;
+            font-size: 20px;
         }
         .thank-you {
             background: #fef3c7;
@@ -166,7 +166,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             padding: 8px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
-            font-size: 16px;
+            font-size: 20px;
             color: #6b7280;
         }
         .contact-info {
@@ -178,7 +178,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             border-radius: 4px;
             padding: 8px;
             margin: 8px 0;
-            font-size: 16px;
+            font-size: 20px;
             color: #1e40af;
         }
         @media print {
