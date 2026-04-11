@@ -42,7 +42,7 @@ function generateReceiptHtml(
     .receipt-container { max-width: 400px; margin: 0 auto; border: 1px solid #059669; border-radius: 6px; overflow: hidden; }
     .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 10px 12px; text-align: center; }
     .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
-    .header p { margin: 2px 0 0 0; font-size: 14px; opacity: 0.9; }
+    .header p { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; opacity: 1; letter-spacing: 0.5px; }
     .content { padding: 10px 12px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f8fafc; padding: 8px 10px; border-radius: 4px; margin-bottom: 8px; }
     .info-item { display: flex; flex-direction: column; }
@@ -178,7 +178,8 @@ export async function POST(request: NextRequest) {
     )
 
     // 3. Insert receipt into receipts table (id auto-increments)
-    const transactionDate = new Date()
+    // Store in Sri Lankan time (Asia/Colombo, UTC+5:30)
+    const transactionDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" }))
     const receiptHtml = generateReceiptHtml(
       "", // placeholder, will update after we get the id
       family_code,
@@ -286,7 +287,7 @@ export async function GET(request: NextRequest) {
     const family_code = searchParams.get("family_code")
     const date = searchParams.get("date")
 
-    let query = `SELECT p.*, f.family_name FROM payment p JOIN families f ON p.family_code = f.family_code WHERE 1=1`
+    let query = `SELECT p.*, f.family_name, r.receipt_html FROM payment p JOIN families f ON p.family_code = f.family_code LEFT JOIN receipts r ON p.receipt_number = r.receipt_number WHERE 1=1`
     const params: any[] = []
     let idx = 1
 

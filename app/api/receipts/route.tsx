@@ -40,7 +40,7 @@ const donationCategories = [
 ]
 
 function generatePDFContent(donation: any, family: any, category: any) {
-  const currentDate = new Date().toLocaleDateString()
+  const currentDate = new Date().toLocaleDateString("en-LK", { timeZone: "Asia/Colombo" })
   const donationDate = new Date(donation.collection_date).toLocaleDateString()
 
   return `

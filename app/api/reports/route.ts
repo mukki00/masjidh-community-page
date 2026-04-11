@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get("date") || new Date().toISOString().split("T")[0]
+    const date = searchParams.get("date") || new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })).toISOString().split("T")[0]
 
     // Daily summary: total amount, transaction count, breakdown by payment method
     const summaryRes = await pool.query(
