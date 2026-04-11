@@ -53,51 +53,52 @@ function generatePDFContent(donation: any, family: any, category: any) {
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 8px;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.3;
+            font-size: 12px;
         }
         .receipt-container {
-            max-width: 600px;
+            max-width: 400px;
             margin: 0 auto;
-            border: 2px solid #059669;
-            border-radius: 8px;
+            border: 1px solid #059669;
+            border-radius: 6px;
             overflow: hidden;
         }
         .header {
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 10px 12px;
             text-align: center;
         }
         .header h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: 18px;
             font-weight: bold;
         }
         .header p {
-            margin: 5px 0 0 0;
-            font-size: 16px;
+            margin: 2px 0 0 0;
+            font-size: 12px;
             opacity: 0.9;
         }
         .content {
-            padding: 30px 20px;
+            padding: 10px 12px;
         }
         .receipt-info {
             background: #f8fafc;
-            padding: 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
         }
         .receipt-info h2 {
-            margin: 0 0 15px 0;
+            margin: 0 0 6px 0;
             color: #059669;
-            font-size: 20px;
+            font-size: 14px;
         }
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 6px;
         }
         .info-item {
             display: flex;
@@ -106,81 +107,83 @@ function generatePDFContent(donation: any, family: any, category: any) {
         .info-label {
             font-weight: bold;
             color: #374151;
-            font-size: 12px;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+            margin-bottom: 1px;
         }
         .info-value {
             color: #111827;
-            font-size: 14px;
+            font-size: 11px;
         }
         .amount-section {
             background: #ecfdf5;
-            border: 2px solid #059669;
-            border-radius: 8px;
-            padding: 25px;
+            border: 1px solid #059669;
+            border-radius: 6px;
+            padding: 10px;
             text-align: center;
-            margin: 25px 0;
+            margin: 8px 0;
         }
         .amount-label {
-            font-size: 14px;
+            font-size: 10px;
             color: #047857;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
         }
         .amount-value {
-            font-size: 36px;
+            font-size: 22px;
             font-weight: bold;
             color: #059669;
             margin: 0;
         }
         .family-section {
             border-top: 1px solid #e5e7eb;
-            padding-top: 25px;
-            margin-top: 25px;
+            padding-top: 8px;
+            margin-top: 8px;
         }
         .family-section h3 {
-            margin: 0 0 15px 0;
+            margin: 0 0 6px 0;
             color: #374151;
-            font-size: 16px;
+            font-size: 12px;
         }
         .thank-you {
             background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: 0 6px 6px 0;
+            border-left: 3px solid #f59e0b;
+            padding: 8px 10px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
         }
         .thank-you p {
             margin: 0;
             color: #92400e;
             font-style: italic;
+            font-size: 10px;
+            line-height: 1.3;
         }
         .footer {
             background: #f9fafb;
-            padding: 20px;
+            padding: 8px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
-            font-size: 12px;
+            font-size: 10px;
             color: #6b7280;
         }
         .contact-info {
-            margin-top: 15px;
+            margin-top: 4px;
         }
         .tax-notice {
             background: #eff6ff;
             border: 1px solid #3b82f6;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 12px;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 10px;
             color: #1e40af;
         }
         @media print {
-            body { margin: 0; }
+            body { margin: 0; padding: 4px; }
             .receipt-container { border: none; }
         }
     </style>
@@ -197,7 +200,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
                 <h2>Receipt Details</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <span class="info-label">Receipt Number</span>
+                        <span class="info-label">Receipt No.</span>
                         <span class="info-value">${donation.receipt_number}</span>
                     </div>
                     <div class="info-item">
@@ -205,11 +208,11 @@ function generatePDFContent(donation: any, family: any, category: any) {
                         <span class="info-value">${donation.donation_id}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Date of Donation</span>
+                        <span class="info-label">Date</span>
                         <span class="info-value">${donationDate}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Payment Method</span>
+                        <span class="info-label">Payment</span>
                         <span class="info-value">${donation.payment_method.charAt(0).toUpperCase() + donation.payment_method.slice(1)}</span>
                     </div>
                     <div class="info-item">
@@ -251,7 +254,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
                 ${
                   family.address
                     ? `
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 6px;">
                     <span class="info-label">Address</span>
                     <div class="info-value">${family.address}</div>
                 </div>
@@ -263,21 +266,20 @@ function generatePDFContent(donation: any, family: any, category: any) {
             ${
               donation.notes
                 ? `
-            <div style="margin-top: 25px;">
+            <div style="margin-top: 8px;">
                 <span class="info-label">Notes</span>
-                <div class="info-value" style="margin-top: 5px;">${donation.notes}</div>
+                <div class="info-value" style="margin-top: 2px;">${donation.notes}</div>
             </div>
             `
                 : ""
             }
 
             <div class="thank-you">
-                <p>"The example of those who spend their wealth in the way of Allah is like a seed [of grain] which grows seven spikes; in each spike is a hundred grains. And Allah multiplies [His reward] for whom He wills." - Quran 2:261</p>
+                <p>"And Allah multiplies [His reward] for whom He wills." - Quran 2:261</p>
             </div>
 
             <div class="tax-notice">
                 <strong>Tax Receipt Notice:</strong> This receipt serves as acknowledgment of your donation to Jummah Masjid. 
-                Please consult with your tax advisor regarding the deductibility of this donation. 
                 Charitable Registration Number: 123456789RR0001
             </div>
         </div>
@@ -285,8 +287,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
         <div class="footer">
             <div><strong>Jummah Masjid</strong></div>
             <div class="contact-info">
-                123 Community Street, Islamic Center, City 12345<br>
-                Phone: (555) 123-4567 | Email: info@jummahmasjid.org<br>
+                123 Community Street, City 12345 | (555) 123-4567<br>
                 Generated on ${currentDate}
             </div>
         </div>
