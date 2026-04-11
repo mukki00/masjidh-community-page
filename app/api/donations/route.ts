@@ -38,23 +38,23 @@ function generateReceiptHtml(
   <meta charset="UTF-8">
   <title>SANDA Receipt - ${receiptNumber}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 8px; color: #333; line-height: 1.4; font-size: 16px; }
-    .receipt-container { max-width: 400px; margin: 0 auto; border: 1px solid #059669; border-radius: 6px; overflow: hidden; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 8px; color: #333; line-height: 1.5; font-size: 20px; }
+    .receipt-container { max-width: 500px; margin: 0 auto; border: 1px solid #059669; border-radius: 6px; overflow: hidden; }
     .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 10px 12px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
-    .header p { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; opacity: 1; letter-spacing: 0.5px; }
+    .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+    .header p { margin: 4px 0 0 0; font-size: 22px; font-weight: bold; opacity: 1; letter-spacing: 0.5px; }
     .content { padding: 10px 12px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f8fafc; padding: 8px 10px; border-radius: 4px; margin-bottom: 8px; }
     .info-item { display: flex; flex-direction: column; }
-    .info-label { font-weight: bold; color: #374151; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
-    .info-value { color: #111827; font-size: 16px; }
+    .info-label { font-weight: bold; color: #374151; font-size: 20px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+    .info-value { color: #111827; font-size: 20px; }
     .amount-section { background: #ecfdf5; border: 1px solid #059669; border-radius: 6px; padding: 10px; text-align: center; margin: 8px 0; }
-    .amount-label { font-size: 16px; color: #047857; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .amount-value { font-size: 32px; font-weight: bold; color: #059669; margin: 0; }
-    .arrears-section { display: flex; justify-content: space-between; background: #f9fafb; padding: 8px 10px; border-radius: 4px; margin: 6px 0; font-size: 16px; }
+    .amount-label { font-size: 20px; color: #047857; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .amount-value { font-size: 36px; font-weight: bold; color: #059669; margin: 0; }
+    .arrears-section { display: flex; justify-content: space-between; background: #f9fafb; padding: 8px 10px; border-radius: 4px; margin: 6px 0; font-size: 20px; }
     .thank-you { background: #fef3c7; border-left: 3px solid #f59e0b; padding: 8px 10px; margin: 10px 0; border-radius: 0 4px 4px 0; }
-    .thank-you p { margin: 0; color: #92400e; font-style: italic; font-size: 16px; }
-    .footer { background: #f9fafb; padding: 8px; text-align: center; border-top: 1px solid #e5e7eb; font-size: 16px; color: #6b7280; }
+    .thank-you p { margin: 0; color: #92400e; font-style: italic; font-size: 20px; }
+    .footer { background: #f9fafb; padding: 8px; text-align: center; border-top: 1px solid #e5e7eb; font-size: 20px; color: #6b7280; }
     @media print { body { margin: 0; padding: 4px; } .receipt-container { border: none; } }
   </style>
 </head>
