@@ -56,6 +56,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             padding: 8px;
             color: #333;
             line-height: 1.4;
+            font-size: 16px;
         }
         .receipt-container {
             max-width: 400px;
@@ -77,8 +78,9 @@ function generatePDFContent(donation: any, family: any, category: any) {
         }
         .header p {
             margin: 2px 0 0 0;
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 18px;
+            font-weight: bold;
+            opacity: 1;
         }
         .content {
             padding: 10px 12px;
@@ -106,14 +108,14 @@ function generatePDFContent(donation: any, family: any, category: any) {
         .info-label {
             font-weight: bold;
             color: #374151;
-            font-size: 12px;
+            font-size: 16px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 1px;
         }
         .info-value {
             color: #111827;
-            font-size: 14px;
+            font-size: 16px;
         }
         .amount-section {
             background: #ecfdf5;
@@ -124,7 +126,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             margin: 8px 0;
         }
         .amount-label {
-            font-size: 14px;
+            font-size: 16px;
             color: #047857;
             font-weight: bold;
             text-transform: uppercase;
@@ -164,7 +166,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             padding: 8px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
-            font-size: 12px;
+            font-size: 16px;
             color: #6b7280;
         }
         .contact-info {
@@ -176,7 +178,7 @@ function generatePDFContent(donation: any, family: any, category: any) {
             border-radius: 4px;
             padding: 8px;
             margin: 8px 0;
-            font-size: 12px;
+            font-size: 16px;
             color: #1e40af;
         }
         @media print {
