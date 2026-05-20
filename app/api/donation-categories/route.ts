@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 const donationCategories = [
   { id: 1, name: "General Donation", description: "General masjid support and maintenance" },
@@ -11,14 +12,20 @@ const donationCategories = [
   { id: 8, name: "Emergency Fund", description: "Community emergency support" },
 ]
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/donation-categories")
+
   try {
+    log.info("Donation categories fetched", { count: donationCategories.length, ...elapsed(startedAt), status: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
       data: donationCategories,
     })
   } catch (error) {
-    console.error("Error fetching donation categories:", error)
+    log.error("Error fetching donation categories", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json({ success: false, error: "Failed to fetch donation categories" }, { status: 500 })
   }
 }

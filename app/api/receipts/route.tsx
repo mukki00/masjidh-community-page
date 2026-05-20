@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { type NextRequest, NextResponse } from "next/server"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 // Mock data - in real app this would come from database
 const mockDonations = [
@@ -297,24 +298,33 @@ function generatePDFContent(donation: any, family: any, category: any) {
 }
 
 export async function GET(request: NextRequest, { params }: { params: { receiptNumber: string } }) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/receipts")
+
   try {
     const receiptNumber = params.receiptNumber
 
     // Find donation by receipt number
     const donation = mockDonations.find((d) => d.receipt_number === receiptNumber)
     if (!donation) {
+      log.warn("Receipt not found", { receiptNumber, ...elapsed(startedAt), status: 404 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Receipt not found" }, { status: 404 })
     }
 
     // Find family information
     const family = mockFamilies.find((f) => f.id === donation.family_id)
     if (!family) {
+      log.warn("Family information not found for receipt", { receiptNumber, family_id: donation.family_id, ...elapsed(startedAt), status: 404 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Family information not found" }, { status: 404 })
     }
 
     // Find donation category
     const category = donationCategories.find((c) => c.id === donation.category_id)
     if (!category) {
+      log.warn("Donation category not found for receipt", { receiptNumber, category_id: donation.category_id, ...elapsed(startedAt), status: 404 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Donation category not found" }, { status: 404 })
     }
 
@@ -335,6 +345,8 @@ export async function GET(request: NextRequest, { params }: { params: { receiptN
     }
 
     // Return receipt data as JSON
+    log.info("Receipt fetched", { receiptNumber: params.receiptNumber, format, ...elapsed(startedAt), status: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
       data: {
@@ -345,7 +357,8 @@ export async function GET(request: NextRequest, { params }: { params: { receiptN
       },
     })
   } catch (error) {
-    console.error("Error generating receipt:", error)
+    log.error("Error generating receipt", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json({ success: false, error: "Failed to generate receipt" }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Pool } from "pg"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 declare global {
   var _pgPool: Pool | undefined
@@ -19,9 +20,14 @@ if (!globalThis._pgPool) globalThis._pgPool = pool
  * Protected by CRON_SECRET so only Vercel Cron (or an admin) can trigger it.
  */
 export async function GET(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/cron/monthly-arrears")
+
   // Verify the request is from Vercel Cron or an authorized caller
   const authHeader = request.headers.get("authorization")
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    log.warn("Cron: unauthorized request", { ...elapsed(startedAt), status: 401 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
@@ -29,6 +35,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (!process.env.DATABASE_URL) {
+    log.error("Missing DATABASE_URL", { ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Missing DATABASE_URL" },
       { status: 500 }
@@ -44,6 +52,8 @@ export async function GET(request: NextRequest) {
        RETURNING family_code, family_name, sanda_amount, arrears`
     )
 
+    log.info("Monthly arrears updated", { updated_count: result.rowCount, ...elapsed(startedAt), status: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
       message: `Monthly arrears updated for ${result.rowCount} families`,
@@ -53,7 +63,8 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error updating monthly arrears:", error)
+    log.error("Error updating monthly arrears", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Failed to update monthly arrears" },
       { status: 500 }
