@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { createRouteLogger, elapsed } from "@/lib/logger"
 // CSV parsing utility
 function parseCSV(csvText: string): { families: any[]; errors: string[] } {
   const lines = csvText.trim().split("\n")
@@ -60,15 +61,22 @@ function parseCSV(csvText: string): { families: any[]; errors: string[] } {
 }
 
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/families/import")
+
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File
 
     if (!file) {
+      log.warn("Import failed: no file provided", { ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 })
     }
 
     if (!file.name.endsWith(".csv")) {
+      log.warn("Import failed: file is not CSV", { fileName: file.name, ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "File must be a CSV" }, { status: 400 })
     }
 
@@ -76,6 +84,8 @@ export async function POST(request: NextRequest) {
     const { families, errors } = parseCSV(csvText)
 
     if (families.length === 0) {
+      log.warn("Import failed: no valid families in CSV", { validation_errors: errors.length, ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json(
         { success: false, error: "No valid families found in CSV", validation_errors: errors },
         { status: 400 },
@@ -83,12 +93,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (families.length > 2500) {
+      log.warn("Import failed: exceeds 2500 limit", { count: families.length, ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Maximum 2,500 families allowed per import" }, { status: 400 })
     }
 
     // Read neon connection string from env
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
+      log.error("Database connection string not configured", { ...elapsed(startedAt), status: 500 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Database connection string not configured" }, { status: 500 });
     }
 
@@ -158,6 +172,16 @@ export async function POST(request: NextRequest) {
       ].filter(Boolean);
       const message = messageParts.join(", ");
 
+      log.info("CSV import completed", {
+        total: importResult.total_processed,
+        imported: importResult.successful_imports,
+        duplicates: importResult.duplicate_keys.length,
+        row_errors: importResult.row_errors.length,
+        ...elapsed(startedAt),
+        status: 200,
+      })
+      await log.flush()
+
       return NextResponse.json({
         success: true,
         data: importResult,
@@ -165,13 +189,16 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbErr) {
       await client.query("ROLLBACK");
-      console.error("DB import error:", dbErr);
       if ((dbErr as any)?.code === "23505") {
         const detail = (dbErr as any).detail || "";
         const dupMatch = detail.match(/Key \(([^)]+)\)=\(([^)]+)\)/);
         const dupKey = dupMatch ? dupMatch[2] : detail || "duplicate key";
+        log.warn("Import DB rollback: duplicate key", { dupKey, error: String(dbErr), ...elapsed(startedAt), status: 409 })
+        await log.flush()
         return NextResponse.json({ success: false, error: "Duplicate key error", duplicate: dupKey }, { status: 409 });
       }
+      log.error("Import DB error during transaction", { error: String(dbErr), ...elapsed(startedAt), status: 500 })
+      await log.flush()
       return NextResponse.json({ success: false, error: "Database error during import" }, { status: 500 });
     } finally {
       // attempt to close connection if supported
@@ -182,9 +209,10 @@ export async function POST(request: NextRequest) {
       }
     }
   } catch (error) {
-    console.error("Error processing CSV import:", error)
+    log.error("Error processing CSV import", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to process CSV import" },
+      { success: false, error: (error as any).message || "Failed to process CSV import" },
       { status: 500 },
     )
   }

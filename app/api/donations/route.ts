@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Pool } from "pg"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 declare global {
   var _pgPool: Pool | undefined
@@ -118,7 +119,12 @@ function generateReceiptHtml(
 }
 
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/donations")
+
   if (!process.env.DATABASE_URL) {
+    log.error("Missing DATABASE_URL", { ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Database connection string not configured" },
       { status: 500 }
@@ -132,6 +138,8 @@ export async function POST(request: NextRequest) {
     const { family_code, amount, payment_method, notes, collected_by } = body
 
     if (!family_code || !amount || !payment_method || !collected_by) {
+      log.warn("Payment failed: missing required fields", { family_code, ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
@@ -140,6 +148,8 @@ export async function POST(request: NextRequest) {
 
     const parsedAmount = parseFloat(amount)
     if (parsedAmount <= 0) {
+      log.warn("Payment failed: amount <= 0", { family_code, amount, ...elapsed(startedAt), status: 400 })
+      await log.flush()
       return NextResponse.json(
         { success: false, error: "Amount must be greater than 0" },
         { status: 400 }
@@ -160,6 +170,8 @@ export async function POST(request: NextRequest) {
 
     if (familyRes.rowCount === 0) {
       await client.query("ROLLBACK")
+      log.warn("Payment failed: family not found", { family_code, ...elapsed(startedAt), status: 404 })
+      await log.flush()
       return NextResponse.json(
         { success: false, error: "Family not found" },
         { status: 404 }
@@ -244,6 +256,19 @@ export async function POST(request: NextRequest) {
 
     const payment = paymentRes.rows[0]
 
+    log.info("Payment recorded", {
+      family_code,
+      amount: parsedAmount,
+      payment_method,
+      receipt_number: payment.receipt_number,
+      collected_by,
+      previous_arrears: previousArrears,
+      new_arrears: newArrears,
+      ...elapsed(startedAt),
+      status: 201,
+    })
+    await log.flush()
+
     return NextResponse.json(
       {
         success: true,
@@ -264,7 +289,8 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     await client.query("ROLLBACK")
-    console.error("Error processing payment:", error)
+    log.error("Error processing payment", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Failed to process payment" },
       { status: 500 }
@@ -275,7 +301,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/donations")
+
   if (!process.env.DATABASE_URL) {
+    log.error("Missing DATABASE_URL", { ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Missing DATABASE_URL" },
       { status: 500 }
@@ -305,13 +336,16 @@ export async function GET(request: NextRequest) {
 
     const result = await pool.query(query, params)
 
+    log.info("Donations fetched", { family_code: family_code ?? null, date: date ?? null, count: result.rowCount, ...elapsed(startedAt), status: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
       data: result.rows,
       total: result.rowCount,
     })
   } catch (error) {
-    console.error("Error fetching donations:", error)
+    log.error("Error fetching donations", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Failed to fetch donations" },
       { status: 500 }

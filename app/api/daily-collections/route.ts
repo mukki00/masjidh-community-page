@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 function slNow() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" }))
@@ -26,6 +27,9 @@ const dailyCollections = [
 ]
 
 export async function GET(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/daily-collections")
+
   try {
     const { searchParams } = new URL(request.url)
     const date = searchParams.get("date") || slNow().toISOString().split("T")[0]
@@ -53,23 +57,31 @@ export async function GET(request: NextRequest) {
       }
       dailyCollections.push(newCollection)
 
+      log.info("Daily collection created (new date)", { date, ...elapsed(startedAt), status: 200 })
+      await log.flush()
       return NextResponse.json({
         success: true,
         data: newCollection,
       })
     }
 
+    log.info("Daily collection fetched", { date, status: collection.status, ...elapsed(startedAt), status_code: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
       data: collection,
     })
   } catch (error) {
-    console.error("Error fetching daily collection:", error)
+    log.error("Error fetching daily collection", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json({ success: false, error: "Failed to fetch daily collection" }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/daily-collections")
+
   try {
     const body = await request.json()
     const { action, date, closed_by } = body
@@ -81,6 +93,8 @@ export async function POST(request: NextRequest) {
         collection.closed_by = closed_by || "System"
         collection.closed_at = slNow().toISOString()
 
+        log.info("Daily collection closed", { date, closed_by: collection.closed_by, ...elapsed(startedAt), status: 200 })
+        await log.flush()
         return NextResponse.json({
           success: true,
           data: collection,
@@ -89,9 +103,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    log.warn("Invalid action or collection not found", { action, date, ...elapsed(startedAt), status: 400 })
+    await log.flush()
     return NextResponse.json({ success: false, error: "Invalid action or collection not found" }, { status: 400 })
   } catch (error) {
-    console.error("Error updating daily collection:", error)
+    log.error("Error updating daily collection", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json({ success: false, error: "Failed to update daily collection" }, { status: 500 })
   }
 }

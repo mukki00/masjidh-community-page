@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Pool } from "pg"
+import { createRouteLogger, elapsed } from "@/lib/logger"
 
 declare global {
   var _pgPool: Pool | undefined
@@ -14,7 +15,12 @@ const pool: Pool =
 if (!globalThis._pgPool) globalThis._pgPool = pool
 
 export async function GET(request: NextRequest) {
+  const startedAt = Date.now()
+  const log = createRouteLogger(request, "/api/sanda-stats")
+
   if (!process.env.DATABASE_URL) {
+    log.error("Missing DATABASE_URL", { ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Missing DATABASE_URL" },
       { status: 500 }
@@ -36,16 +42,21 @@ export async function GET(request: NextRequest) {
       ),
     ])
 
+    const stats = {
+      total_families: parseInt(familiesRes.rows[0].total),
+      todays_collections: parseFloat(todayPaymentsRes.rows[0].total),
+      receipts_issued: parseInt(todayReceiptsRes.rows[0].total),
+    }
+
+    log.info("Sanda stats fetched", { ...stats, today, ...elapsed(startedAt), status: 200 })
+    await log.flush()
     return NextResponse.json({
       success: true,
-      data: {
-        total_families: parseInt(familiesRes.rows[0].total),
-        todays_collections: parseFloat(todayPaymentsRes.rows[0].total),
-        receipts_issued: parseInt(todayReceiptsRes.rows[0].total),
-      },
+      data: stats,
     })
   } catch (error) {
-    console.error("Error fetching sanda stats:", error)
+    log.error("Error fetching sanda stats", { error: String(error), ...elapsed(startedAt), status: 500 })
+    await log.flush()
     return NextResponse.json(
       { success: false, error: "Failed to fetch stats" },
       { status: 500 }
