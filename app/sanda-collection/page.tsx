@@ -18,6 +18,7 @@ import {
   Pencil,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react"
 import { useLoading } from "@/components/loading-provider"
 import { LoadingSpinner } from "@/components/ui/spinner"
@@ -68,6 +69,9 @@ export default function SandaCollectionPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
+  const [familyToRemove, setFamilyToRemove] = useState<FamilyType | null>(null)
+  const [isRemoving, setIsRemoving] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedFamilyCode, setSelectedFamilyCode] = useState<string | null>(null)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
@@ -392,6 +396,42 @@ export default function SandaCollectionPage() {
     setFamilyIdInput(family.family_code) // Auto-populate the form
   }
 
+  const handleRemoveFamily = async (family_code: string) => {
+    const family = families.find(f => f.family_code === family_code) || null
+    setFamilyToRemove(family)
+    setIsRemoveDialogOpen(true)
+  }
+
+  const confirmRemoveFamily = async () => {
+    if (!familyToRemove) return
+    setIsRemoving(true)
+    try {
+      const res = await fetch(`/api/families/${familyToRemove.family_code}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: false }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        setIsRemoveDialogOpen(false)
+        showAlert("success", "Family removed successfully")
+        if (selectedFamilyCode === familyToRemove.family_code) {
+          setSelectedFamily(null)
+          setSelectedFamilyCode("")
+          setFamilyIdInput("")
+        }
+        fetchFamilies(searchTerm)
+      } else {
+        showAlert("error", result.error || "Failed to remove family")
+      }
+    } catch {
+      showAlert("error", "Failed to remove family")
+    } finally {
+      setIsRemoving(false)
+      setFamilyToRemove(null)
+    }
+  }
+
   return (
     <AuthGuard>
     <div className="min-h-screen bg-background">
@@ -583,7 +623,7 @@ export default function SandaCollectionPage() {
                                         Head: {family.family_name}
                                       </CardDescription>
                                     </div>
-                                    <div className="ml-4">
+                                    <div className="ml-4 flex flex-col items-end gap-2">
                                       <Button
                                         size="sm"
                                         variant={isSelected ? "secondary" : "outline"}
@@ -600,6 +640,16 @@ export default function SandaCollectionPage() {
                                         ) : (
                                           <span>Select</span>
                                         )}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleRemoveFamily(family.family_code)}
+                                        aria-label={`Remove ${family.family_name}`}
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                        disabled={isProcessing}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </div>
                                   </div>
@@ -1007,6 +1057,55 @@ export default function SandaCollectionPage() {
             </Button>
             <Button onClick={handlePaymentSubmit} disabled={isProcessing}>
               {isProcessing ? "Processing..." : "Confirm Payment"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Family Confirmation Dialog */}
+      <Dialog open={isRemoveDialogOpen} onOpenChange={(open) => { if (!isRemoving) setIsRemoveDialogOpen(open) }}>
+        <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <DialogTitle className="text-lg">Remove Family</DialogTitle>
+            </div>
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-foreground">{familyToRemove?.family_name}</span>
+              {familyToRemove?.family_code && (
+                <span className="text-xs ml-1 text-muted-foreground">({familyToRemove.family_code})</span>
+              )}
+              ? The record will be hidden but not permanently deleted and can be restored by an administrator.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsRemoveDialogOpen(false)}
+              disabled={isRemoving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemoveFamily}
+              disabled={isRemoving}
+              className="gap-2"
+            >
+              {isRemoving ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Remove
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>

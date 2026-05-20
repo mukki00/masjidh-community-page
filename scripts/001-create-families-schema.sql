@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS families (
     family_code VARCHAR(20) UNIQUE NOT NULL,   -- Custom family identifier (e.g., FAM001)
     family_name VARCHAR(100) NOT NULL,
-    id_card_no VARCHAR(10) NOT NULL,
+    id_card_no VARCHAR(12) NOT NULL,
     phone VARCHAR(20),
     sanda_amount VARCHAR(100),                 -- Monthly SANDA contribution target
     arrears VARCHAR(100)                       -- Outstanding balance

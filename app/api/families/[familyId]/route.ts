@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const familyRes = await pool.query(
       `SELECT family_code, family_name, id_card_no, phone, sanda_amount, arrears
        FROM families
-       WHERE family_code = $1`,
+       WHERE family_code = $1 AND active = true`,
       [family_code]
     );
 
@@ -111,6 +111,50 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error("DB error:", error);
+    return NextResponse.json({ success: false, error: "Database error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ familyId: string }> }) {
+  const resolvedParams = await params;
+  const family_code = resolvedParams?.familyId;
+
+  if (!family_code) {
+    return NextResponse.json({ success: false, error: "Missing familyId param" }, { status: 400 });
+  }
+
+  // Block access to dev families for non-Developer users
+  if (DEV_FAMILY_CODES.includes(family_code)) {
+    const userRole = await getUserRole(request);
+    if (userRole !== "Developer") {
+      return NextResponse.json({ success: false, error: "Family not found" }, { status: 404 });
+    }
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ success: false, error: "Missing DATABASE_URL" }, { status: 500 });
+  }
+
+  try {
+    const body = await request.json();
+    const { active } = body;
+
+    if (typeof active !== "boolean") {
+      return NextResponse.json({ success: false, error: "'active' must be a boolean" }, { status: 400 });
+    }
+
+    const result = await pool.query(
+      `UPDATE families SET active = $1 WHERE family_code = $2 RETURNING family_code`,
+      [active, family_code]
+    );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json({ success: false, error: "Family not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DB error:", error);
     return NextResponse.json({ success: false, error: "Database error" }, { status: 500 });
