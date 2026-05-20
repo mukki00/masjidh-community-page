@@ -46,6 +46,9 @@ export async function GET(request: NextRequest) {
     const params: (string | string[])[] = [];
     const conditions: string[] = [];
 
+    // Only return active families
+    conditions.push(`active = true`);
+
     // Exclude dev family codes for non-Developer users
     if (userRole !== "Developer") {
       params.push(DEV_FAMILY_CODES);
@@ -79,5 +82,45 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching families:", error)
     return NextResponse.json({ success: false, error: "Failed to fetch families" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ success: false, error: "Missing DATABASE_URL" }, { status: 500 });
+  }
+
+  try {
+    const body = await request.json();
+    const { family_code, family_name, id_card_no, phone, sanda_amount, arrears } = body;
+
+    if (!family_code || !family_name || !sanda_amount) {
+      return NextResponse.json(
+        { success: false, error: "Missing required fields: family_code, family_name, sanda_amount" },
+        { status: 400 }
+      );
+    }
+
+    if (id_card_no && String(id_card_no).length > 12) {
+      return NextResponse.json(
+        { success: false, error: "id_card_no must be at most 12 characters" },
+        { status: 400 }
+      );
+    }
+
+    const result = await pool.query(
+      `INSERT INTO families (family_code, family_name, id_card_no, phone, sanda_amount, arrears)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING family_code, family_name, id_card_no, phone, sanda_amount, arrears`,
+      [family_code, family_name, id_card_no, phone, sanda_amount, arrears || 0]
+    );
+
+    return NextResponse.json({ success: true, data: result.rows[0] }, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating family:", error);
+    if (error?.code === "23505") {
+      return NextResponse.json({ success: false, error: "Family code already exists" }, { status: 409 });
+    }
+    return NextResponse.json({ success: false, error: "Failed to create family" }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Upload, Download, FileText, CheckCircle, AlertCircle, Database, ArrowRight } from "lucide-react"
+import { Upload, Download, FileText, CheckCircle, AlertCircle, Database, ArrowRight, UserPlus } from "lucide-react"
 import { useLoading } from "@/components/loading-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,11 +19,62 @@ import { log } from "console"
 
 export default function ImportPage() {
   const { setLoading } = useLoading()
+  const [activeTab, setActiveTab] = useState<"bulk" | "single">("bulk")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [importResult, setImportResult] = useState<any>(null)
   const [alert, setAlert] = useState({ show: false, type: "", message: "" })
+
+  const [singleForm, setSingleForm] = useState({
+    family_code: "",
+    family_name: "",
+    id_card_no: "",
+    phone: "",
+    sanda_amount: "",
+    arrears: "",
+  })
+  const [isSavingSingle, setIsSavingSingle] = useState(false)
+
+  const handleSingleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSingleForm({ ...singleForm, [e.target.name]: e.target.value })
+  }
+
+  const handleSingleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!singleForm.family_code.trim() || !singleForm.family_name.trim() || !singleForm.sanda_amount.trim()) {
+      showAlert("error", "Family Code, Family Name, and SANDA Amount are required.")
+      return
+    }
+    setIsSavingSingle(true)
+    setLoading(true, "Saving family record...")
+    try {
+      const res = await fetch("/api/families", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          family_code: singleForm.family_code.trim().toUpperCase(),
+          family_name: singleForm.family_name.trim(),
+          id_card_no: singleForm.id_card_no.trim(),
+          phone: singleForm.phone.trim(),
+          sanda_amount: parseFloat(singleForm.sanda_amount),
+          arrears: singleForm.arrears ? parseFloat(singleForm.arrears) : 0,
+        }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        showAlert("success", `Family "${result.data.family_name}" (${result.data.family_code}) added successfully.`)
+        setSingleForm({ family_code: "", family_name: "", id_card_no: "", phone: "", sanda_amount: "", arrears: "" })
+      } else {
+        showAlert("error", result.error || "Failed to add family")
+      }
+    } catch {
+      showAlert("error", "Failed to add family")
+    } finally {
+      setIsSavingSingle(false)
+      setLoading(false)
+    }
+  }
 
   // Show alert message
   const showAlert = (type: string, message: string) => {
@@ -153,9 +204,9 @@ export default function ImportPage() {
       <section className="py-8 px-4 bg-card/30">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Family Data Import</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-4">Family Records</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Bulk import family information from CSV files. Support for up to 2,500 families per import.
+              Add families one by one or bulk import from a CSV file.
             </p>
           </div>
 
@@ -205,6 +256,197 @@ export default function ImportPage() {
       {/* Import Interface */}
       <section className="py-8 px-4">
         <div className="container mx-auto max-w-4xl">
+
+          {/* Tab Toggle */}
+          <div className="flex gap-2 mb-8 border-b border-border">
+            <button
+              onClick={() => setActiveTab("single")}
+              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+                activeTab === "single"
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Single Family
+            </button>
+            <button
+              onClick={() => setActiveTab("bulk")}
+              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+                activeTab === "bulk"
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              Bulk CSV Import
+            </button>
+          </div>
+
+          {/* Single Family Form */}
+          {activeTab === "single" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-primary" />
+                    Add Family Record
+                  </CardTitle>
+                  <CardDescription>Enter the details for a new family</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSingleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="family_code">
+                          Family Code <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="family_code"
+                          name="family_code"
+                          placeholder="e.g. FAM001"
+                          value={singleForm.family_code}
+                          onChange={handleSingleFormChange}
+                          disabled={isSavingSingle}
+                          className="uppercase"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="family_name">
+                          Family Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="family_name"
+                          name="family_name"
+                          placeholder="e.g. Abdul Rahman"
+                          value={singleForm.family_name}
+                          onChange={handleSingleFormChange}
+                          disabled={isSavingSingle}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="id_card_no">NIC / ID Card No.</Label>
+                      <Input
+                        id="id_card_no"
+                        name="id_card_no"
+                        placeholder="e.g. 123456789V"
+                        maxLength={12}
+                        value={singleForm.id_card_no}
+                        onChange={handleSingleFormChange}
+                        disabled={isSavingSingle}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        placeholder="e.g. 0771234567"
+                        value={singleForm.phone}
+                        onChange={handleSingleFormChange}
+                        disabled={isSavingSingle}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sanda_amount">
+                          SANDA Amount (LKR) <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="sanda_amount"
+                          name="sanda_amount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="e.g. 5000"
+                          value={singleForm.sanda_amount}
+                          onChange={handleSingleFormChange}
+                          disabled={isSavingSingle}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="arrears">Arrears (LKR)</Label>
+                        <Input
+                          id="arrears"
+                          name="arrears"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="e.g. 0"
+                          value={singleForm.arrears}
+                          onChange={handleSingleFormChange}
+                          disabled={isSavingSingle}
+                        />
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isSavingSingle}>
+                      {isSavingSingle ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add Family
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    Field Guide
+                  </CardTitle>
+                  <CardDescription>What each field means</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="text-sm space-y-3">
+                    <li>
+                      <span className="font-medium text-foreground">Family Code</span>
+                      <span className="ml-1 text-xs text-red-500 font-medium">required</span>
+                      <p className="text-muted-foreground mt-0.5">Unique identifier for the family (e.g. FAM001). Must not already exist.</p>
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Family Name</span>
+                      <span className="ml-1 text-xs text-red-500 font-medium">required</span>
+                      <p className="text-muted-foreground mt-0.5">Full name of the head of family.</p>
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">NIC / ID Card No.</span>
+                      <p className="text-muted-foreground mt-0.5">National ID card number, up to 12 characters.</p>
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Phone Number</span>
+                      <p className="text-muted-foreground mt-0.5">Primary contact number for the family.</p>
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">SANDA Amount</span>
+                      <span className="ml-1 text-xs text-red-500 font-medium">required</span>
+                      <p className="text-muted-foreground mt-0.5">Monthly SANDA contribution amount in LKR.</p>
+                    </li>
+                    <li>
+                      <span className="font-medium text-foreground">Arrears</span>
+                      <p className="text-muted-foreground mt-0.5">Outstanding balance carried forward. Defaults to 0.</p>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Bulk CSV Import */}
+          {activeTab === "bulk" && (
+          <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Upload Section */}
             <Card>
@@ -391,6 +633,8 @@ export default function ImportPage() {
               </CardContent>
             </Card>
           )}
+          </> 
+          )} {/* end bulk tab */}
         </div>
       </section>
       <Footer />
